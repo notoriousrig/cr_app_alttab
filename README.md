@@ -50,11 +50,31 @@ that case Windows' built‑in Alt+Tab takes over for that window only. This is a
 deliberate Windows security boundary, not a bug — getting around it would
 require running AltTabCustom as admin, which defeats the requirement.
 
+## Download
+
+Prebuilt Windows binaries are attached to each
+[GitHub Release](https://github.com/notoriousrig/cr_app_alttab/releases/latest).
+Two flavors of the same app — pick one:
+
+| File | Size | Needs |
+|---|---|---|
+| **`AltTabCustom.exe`** | ~70 MB | Nothing — self-contained, no install, **no admin**. *Recommended.* |
+| **`AltTabCustom-requires-dotnet8.exe`** | ~3 MB | The [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) installed first. |
+
+The big file bundles the entire .NET runtime + WPF, which is why it's large; it's
+the price of being zero-install. The slim file skips the runtime, so it's tiny
+but won't start unless the .NET 8 Desktop Runtime is present (installing that
+usually needs admin — which is why the self-contained build is recommended for
+the no-admin use case).
+
+> Note: trimming (which normally shrinks self-contained apps) is **not supported
+> for WPF**, so the self-contained build can't be made meaningfully smaller.
+
 ## Requirements
 
 - Windows 10 / 11 (x64)
 - To build: the [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
-- To run the published single‑file build: **nothing** — it is self‑contained.
+- To run the self‑contained build: **nothing** — the runtime is bundled.
 
 ## Build & run
 

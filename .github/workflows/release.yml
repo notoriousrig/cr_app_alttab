@@ -32,17 +32,32 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
-      - name: Publish (Release, self-contained single file)
+      - name: Publish self-contained (single file, no runtime needed)
         run: >
           dotnet publish src/AltTabCustom/AltTabCustom.csproj
           -c Release -r win-x64 --self-contained true
-          -p:PublishSingleFile=true -o publish
+          -p:PublishSingleFile=true -o publish-sc
 
-      - name: Create GitHub Release and upload exe
+      - name: Publish framework-dependent (slim, requires .NET 8 Desktop Runtime)
+        run: >
+          dotnet publish src/AltTabCustom/AltTabCustom.csproj
+          -c Release -r win-x64 --self-contained false -p:SelfContained=false
+          -p:PublishSingleFile=true -o publish-fd
+
+      - name: Stage release assets with descriptive names
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Copy-Item publish-sc/AltTabCustom.exe dist/AltTabCustom.exe
+          Copy-Item publish-fd/AltTabCustom.exe dist/AltTabCustom-requires-dotnet8.exe
+
+      - name: Create GitHub Release and upload exes
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.inputs.version || github.ref_name }}
-          files: publish/AltTabCustom.exe
+          files: |
+            dist/AltTabCustom.exe
+            dist/AltTabCustom-requires-dotnet8.exe
           fail_on_unmatched_files: true
           generate_release_notes: true
           make_latest: true
@@ -50,10 +65,15 @@ jobs:
           body: |
             **AltTabCustom** — a customizable, no-admin Alt+Tab window switcher for Windows 11.
 
-            ### Download
-            Grab **`AltTabCustom.exe`** below. It is self-contained (no .NET install
-            needed) and runs as a normal user — **no administrator rights required**.
-            It minimizes to the system tray; right-click the tray icon → **Settings…**.
+            ### Download — pick one
+            - **`AltTabCustom.exe`** (~70 MB) — *recommended.* Self-contained: just
+              run it, **nothing to install, no admin needed**.
+            - **`AltTabCustom-requires-dotnet8.exe`** (~3 MB) — slim build for people
+              who already have (or can install) the **.NET 8 Desktop Runtime**.
+              Smaller download, but it won't start without that runtime.
+
+            Either runs as a normal user and minimizes to the system tray;
+            right-click the tray icon → **Settings…**.
 
             > Windows SmartScreen may warn that the publisher is unknown (the exe is
             > unsigned). Click *More info → Run anyway*.
