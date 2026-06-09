@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <!-- WinForms is enabled only for the system tray NotifyIcon. -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>AltTabCustom</RootNamespace>
+    <AssemblyName>AltTabCustom</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- No admin manifest: we run as a normal (asInvoker) user. -->
+    <Version>1.0.0</Version>
+    <Product>AltTabCustom</Product>
+    <Description>A customizable, no-admin Alt+Tab window switcher for Windows 11.</Description>
+  </PropertyGroup>
+
+  <!-- Convenient single-file, self-contained publish profile defaults.
+       Override on the command line if you prefer framework-dependent. -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+  </PropertyGroup>
+
+</Project>

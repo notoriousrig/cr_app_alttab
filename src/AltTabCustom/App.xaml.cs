@@ -1,0 +1,105 @@
+using System.Windows;
+using AltTabCustom.Core;
+using AltTabCustom.Settings;
+using AltTabCustom.UI;
+using Forms = System.Windows.Forms;
+
+namespace AltTabCustom;
+
+public partial class App : Application
+{
+    private const string MutexName = "AltTabCustom.SingleInstance.5F2A0E1C";
+
+    private Mutex? _singleInstance;
+    private SwitcherController? _controller;
+    private Forms.NotifyIcon? _tray;
+    private AppSettings _settings = new();
+    private SettingsWindow? _settingsWindow;
+
+    protected override void OnStartup(StartupEventArgs e)
+    {
+        base.OnStartup(e);
+
+        // Only one instance — a second launch just exits quietly.
+        _singleInstance = new Mutex(initiallyOwned: true, MutexName, out bool createdNew);
+        if (!createdNew)
+        {
+            Shutdown();
+            return;
+        }
+
+        _settings = SettingsStore.Load();
+
+        // Keep the saved "start with Windows" flag in sync with the registry.
+        StartupManager.Apply(_settings.StartWithWindows);
+
+        try
+        {
+            _controller = new SwitcherController(_settings);
+            _controller.Start();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"AltTabCustom could not install its keyboard hook:\n\n{ex.Message}",
+                "AltTabCustom", MessageBoxButton.OK, MessageBoxImage.Error);
+            Shutdown();
+            return;
+        }
+
+        CreateTrayIcon();
+    }
+
+    private void CreateTrayIcon()
+    {
+        var menu = new Forms.ContextMenuStrip();
+        menu.Items.Add("Settings…", null, (_, _) => OpenSettings());
+        menu.Items.Add(new Forms.ToolStripSeparator());
+        menu.Items.Add("Exit", null, (_, _) => Shutdown());
+
+        _tray = new Forms.NotifyIcon
+        {
+            Icon = System.Drawing.SystemIcons.Application,
+            Visible = true,
+            Text = "AltTabCustom — customizable Alt+Tab",
+            ContextMenuStrip = menu,
+        };
+        _tray.DoubleClick += (_, _) => OpenSettings();
+    }
+
+    private void OpenSettings()
+    {
+        if (_settingsWindow is { IsLoaded: true })
+        {
+            _settingsWindow.Activate();
+            return;
+        }
+
+        _settingsWindow = new SettingsWindow(_settings);
+        _settingsWindow.SettingsSaved += OnSettingsSaved;
+        _settingsWindow.Closed += (_, _) => _settingsWindow = null;
+        _settingsWindow.Show();
+        _settingsWindow.Activate();
+    }
+
+    private void OnSettingsSaved(AppSettings updated)
+    {
+        _settings = updated;
+        SettingsStore.Save(updated);
+        StartupManager.Apply(updated.StartWithWindows);
+        _controller?.UpdateSettings(updated);
+    }
+
+    protected override void OnExit(ExitEventArgs e)
+    {
+        _controller?.Dispose();
+        if (_tray is not null)
+        {
+            _tray.Visible = false;
+            _tray.Dispose();
+        }
+        _singleInstance?.ReleaseMutex();
+        _singleInstance?.Dispose();
+        base.OnExit(e);
+    }
+}
