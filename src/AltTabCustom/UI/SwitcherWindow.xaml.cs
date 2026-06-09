@@ -16,8 +16,13 @@ public partial class SwitcherWindow : Window
     private int _selectedIndex = -1;
     private AppSettings _settings = new();
 
+    private IntPtr _targetMonitor;
+
     /// <summary>Raised when the user activates an item (click or commit).</summary>
     public event Action<WindowInfo>? ItemActivated;
+
+    /// <summary>Raised when the user asks to close an item (middle-click).</summary>
+    public event Action<WindowInfo>? ItemCloseRequested;
 
     public SwitcherWindow()
     {
@@ -50,16 +55,11 @@ public partial class SwitcherWindow : Window
         AppSettings settings, IntPtr targetMonitorWindow)
     {
         _settings = settings;
+        _targetMonitor = targetMonitorWindow;
         ApplyTheme(settings);
+        SetSearchText(string.Empty);
 
-        _items.Clear();
-        foreach (var w in windows)
-            _items.Add(new SwitcherItem(w));
-
-        ItemsHost.ItemsSource = null;
-        ItemsHost.ItemsSource = _items;
-
-        ConstrainHeight(settings);
+        PopulateItems(windows, selectedIndex);
 
         IsShowing = true;
         Visibility = Visibility.Visible;
@@ -71,7 +71,49 @@ public partial class SwitcherWindow : Window
             () => ApplyColumns(_settings.Columns));
 
         SetSelection(selectedIndex);
-        PositionOnMonitor(targetMonitorWindow);
+        PositionOnMonitor(_targetMonitor);
+    }
+
+    /// <summary>
+    /// Replace the items while the switcher is already open (used by live
+    /// search filtering and by closing windows from the list).
+    /// </summary>
+    public void UpdateItems(IReadOnlyList<WindowInfo> windows, int selectedIndex, string searchText)
+    {
+        SetSearchText(searchText);
+        PopulateItems(windows, selectedIndex);
+        Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded,
+            () => ApplyColumns(_settings.Columns));
+        SetSelection(selectedIndex);
+        // Size changes with the filtered count, so re-center after layout settles.
+        Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded,
+            () => PositionOnMonitor(_targetMonitor));
+    }
+
+    private void PopulateItems(IReadOnlyList<WindowInfo> windows, int selectedIndex)
+    {
+        _items.Clear();
+        foreach (var w in windows)
+            _items.Add(new SwitcherItem(w));
+
+        ItemsHost.ItemsSource = null;
+        ItemsHost.ItemsSource = _items;
+
+        ConstrainHeight(_settings);
+    }
+
+    private void SetSearchText(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            SearchBar.Visibility = Visibility.Collapsed;
+            SearchText.Text = string.Empty;
+        }
+        else
+        {
+            SearchText.Text = "🔍  " + text; // magnifier glyph + query
+            SearchBar.Visibility = Visibility.Visible;
+        }
     }
 
     public void HideSwitcher()
@@ -117,6 +159,17 @@ public partial class SwitcherWindow : Window
         if (!_settings.ClickToActivate) return;
         if (sender is FrameworkElement { DataContext: SwitcherItem item })
             ItemActivated?.Invoke(item.Window);
+    }
+
+    private void Item_MouseDown(object sender, MouseButtonEventArgs e)
+    {
+        // Middle-click closes a window without switching to it.
+        if (e.ChangedButton != MouseButton.Middle) return;
+        if (sender is FrameworkElement { DataContext: SwitcherItem item })
+        {
+            e.Handled = true;
+            ItemCloseRequested?.Invoke(item.Window);
+        }
     }
 
     private void ConstrainHeight(AppSettings settings)

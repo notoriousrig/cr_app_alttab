@@ -35,6 +35,15 @@ internal static class NativeMethods
     public const int VK_RIGHT = 0x27;
     public const int VK_DOWN = 0x28;
     public const int VK_RETURN = 0x0D;
+    public const int VK_BACK = 0x08;
+    public const int VK_SPACE = 0x20;
+    public const int VK_0 = 0x30;
+    public const int VK_9 = 0x39;
+    public const int VK_A = 0x41;
+    public const int VK_Z = 0x5A;
+    public const int VK_NUMPAD0 = 0x60;
+    public const int VK_NUMPAD9 = 0x69;
+    public const int VK_DELETE = 0x2E;
 
     [StructLayout(LayoutKind.Sequential)]
     public struct KBDLLHOOKSTRUCT
@@ -206,6 +215,29 @@ internal static class NativeMethods
 
     [DllImport("user32.dll")]
     public static extern IntPtr GetShellWindow();
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+
+    public const uint WM_CLOSE = 0x0010;
+
+    // ----- WinEvent hook (used to track focus history for true MRU ordering) -----
+    public delegate void WinEventDelegate(IntPtr hWinEventHook, uint eventType, IntPtr hwnd,
+        int idObject, int idChild, uint dwEventThread, uint dwmsEventTime);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern IntPtr SetWinEventHook(uint eventMin, uint eventMax, IntPtr hmodWinEventProc,
+        WinEventDelegate lpfnWinEventProc, uint idProcess, uint idThread, uint dwFlags);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool UnhookWinEvent(IntPtr hWinEventHook);
+
+    public const uint EVENT_SYSTEM_FOREGROUND = 0x0003;
+    public const uint WINEVENT_OUTOFCONTEXT = 0x0000;
+    public const uint WINEVENT_SKIPOWNPROCESS = 0x0002;
+    public const int OBJID_WINDOW = 0;
 
     // ----- Icons -----
     [DllImport("user32.dll", SetLastError = true)]

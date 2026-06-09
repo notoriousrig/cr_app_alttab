@@ -20,9 +20,15 @@ elevation anywhere.
   - <kbd>Alt</kbd>+<kbd>Tab</kbd> — open / next
   - <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>Tab</kbd> — open / previous
   - Arrow keys — move selection
+  - **Type to filter** — start typing to narrow the list by window title or
+    process name; <kbd>Backspace</kbd> clears a character
+  - <kbd>Delete</kbd> — close the highlighted window (without switching to it)
   - <kbd>Enter</kbd> — activate; <kbd>Esc</kbd> — cancel
   - Release <kbd>Alt</kbd> — activate the highlighted window
-  - Mouse click — activate (optional)
+  - Left mouse click — activate (optional); middle click — close that window
+- **True MRU ordering** — the list is ordered most-recently-used (tracked via a
+  focus hook), so a quick Alt+Tab flips to your last window just like the
+  system switcher.
 - **Customizable** (live, via the tray → Settings dialog):
   - Max items on screen, number of columns
   - Item width/height, icon size
@@ -94,7 +100,9 @@ src/AltTabCustom/
   App.xaml(.cs)              # tray app bootstrap, single-instance, settings wiring
   app.manifest              # asInvoker (no admin) + Per-Monitor v2 DPI
   Core/
-    SwitcherController.cs   # the Alt+Tab state machine
+    SwitcherController.cs   # the Alt+Tab state machine (nav, search, close)
+    MruTracker.cs           # focus-history hook for most-recently-used ordering
+    Logger.cs               # best-effort logging to %AppData%
     StartupManager.cs       # per-user "start with Windows"
   Interop/
     NativeMethods.cs        # all P/Invoke
@@ -112,13 +120,24 @@ src/AltTabCustom/
     SettingsWindow.xaml(.cs)# the settings dialog
 ```
 
-## Known limitations / roadmap
+## Troubleshooting
 
-- **Static icons, not live thumbnails (yet).** v1 shows each window's icon.
-  Live DWM thumbnails (`DwmRegisterThumbnail`) are a planned addition; they
-  render as an OS‑composited layer rather than a WPF visual, so they need extra
-  plumbing.
-- **Elevated foreground windows** fall back to the system switcher (see above).
+AltTabCustom writes a log to:
+
+```
+%AppData%\AltTabCustom\log.txt
+```
+
+Startup, the keyboard hook, and any errors are recorded there — that's the
+first place to look if Alt+Tab stops responding or a window won't activate.
+
+## Known limitations
+
+- **Icon-based items by design.** Each entry shows the window's icon, title, and
+  process — not a live thumbnail. This keeps the switcher fast, light, and free
+  of the DWM-compositing complexity that live previews require.
+- **Elevated foreground windows** fall back to the system switcher (see
+  "Why no admin is needed" above) — an intentional Windows security boundary.
 - The first Alt+Tab of a session does the window enumeration + icon load inside
   the hook callback. On a machine with a very large number of windows this can
   approach Windows' low‑level‑hook timeout; if you ever see a missed first

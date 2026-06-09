@@ -16,6 +16,16 @@
             CornerRadius="{DynamicResource CornerRadiusValue}"
             Padding="14"
             Opacity="{DynamicResource WindowOpacityValue}">
+      <DockPanel>
+        <!-- Type-to-filter search line; hidden until the user starts typing. -->
+        <Border x:Name="SearchBar" DockPanel.Dock="Top"
+                Visibility="Collapsed"
+                Margin="4,0,4,10" Padding="6,2">
+            <TextBlock x:Name="SearchText"
+                       Foreground="{DynamicResource TextBrush}"
+                       FontFamily="{DynamicResource ItemFontFamily}"
+                       FontSize="{DynamicResource ItemFontSize}" />
+        </Border>
         <ScrollViewer x:Name="Scroller"
                       VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled">
@@ -34,7 +44,8 @@
                                 Background="Transparent"
                                 Width="{DynamicResource ItemWidthValue}"
                                 Height="{DynamicResource ItemHeightValue}"
-                                MouseLeftButtonUp="Item_Click">
+                                MouseLeftButtonUp="Item_Click"
+                                MouseDown="Item_MouseDown">
                             <Grid Margin="10,0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
@@ -77,5 +88,6 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
         </ScrollViewer>
+      </DockPanel>
     </Border>
 </Window>

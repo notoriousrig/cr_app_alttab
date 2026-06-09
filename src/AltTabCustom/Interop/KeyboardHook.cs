@@ -45,34 +45,46 @@ internal sealed class KeyboardHook : IDisposable
                 $"Failed to install keyboard hook (Win32 error {Marshal.GetLastWin32Error()}).");
     }
 
+    /// <summary>Optional sink for exceptions thrown while handling a key.</summary>
+    public Action<Exception>? OnError;
+
     private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
     {
-        if (nCode >= 0)
+        try
         {
-            var data = Marshal.PtrToStructure<KBDLLHOOKSTRUCT>(lParam);
-
-            // Ignore input we synthesized ourselves so we never recurse.
-            if ((data.flags & LLKHF_INJECTED) == 0)
+            if (nCode >= 0)
             {
-                int msg = (int)wParam;
-                bool isDown = msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN;
-                bool isUp = msg == WM_KEYUP || msg == WM_SYSKEYUP;
+                var data = Marshal.PtrToStructure<KBDLLHOOKSTRUCT>(lParam);
 
-                if (isDown || isUp)
+                // Ignore input we synthesized ourselves so we never recurse.
+                if ((data.flags & LLKHF_INJECTED) == 0)
                 {
-                    var args = new KeyEventArgs
-                    {
-                        VkCode = (int)data.vkCode,
-                        IsKeyDown = isDown,
-                        AltDown = IsDown(VK_MENU),
-                        ShiftDown = IsDown(VK_SHIFT),
-                        CtrlDown = IsDown(VK_CONTROL),
-                    };
+                    int msg = (int)wParam;
+                    bool isDown = msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN;
+                    bool isUp = msg == WM_KEYUP || msg == WM_SYSKEYUP;
 
-                    if (KeyIntercepted?.Invoke(args) == true)
-                        return new IntPtr(1); // swallow
+                    if (isDown || isUp)
+                    {
+                        var args = new KeyEventArgs
+                        {
+                            VkCode = (int)data.vkCode,
+                            IsKeyDown = isDown,
+                            AltDown = IsDown(VK_MENU),
+                            ShiftDown = IsDown(VK_SHIFT),
+                            CtrlDown = IsDown(VK_CONTROL),
+                        };
+
+                        if (KeyIntercepted?.Invoke(args) == true)
+                            return new IntPtr(1); // swallow
+                    }
                 }
             }
+        }
+        catch (Exception ex)
+        {
+            // Never let an exception escape the hook callback — that can tear
+            // down the hook and leave Alt+Tab broken. Report and carry on.
+            OnError?.Invoke(ex);
         }
 
         return CallNextHookEx(_hookId, nCode, wParam, lParam);

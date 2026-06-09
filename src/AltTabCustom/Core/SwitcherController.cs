@@ -1,3 +1,4 @@
+using System.Text;
 using System.Windows;
 using AltTabCustom.Interop;
 using AltTabCustom.Settings;
@@ -7,11 +8,14 @@ using static AltTabCustom.Interop.NativeMethods;
 namespace AltTabCustom.Core;
 
 /// <summary>
-/// The brain of the app. Owns the keyboard hook and the switcher window, and
-/// implements the Alt+Tab state machine:
+/// The brain of the app. Owns the keyboard hook, the MRU focus tracker, and the
+/// switcher window, and implements the Alt+Tab state machine:
 ///   * Alt+Tab (down)           -> open / advance forward
 ///   * Alt+Shift+Tab (down)     -> open / advance backward
 ///   * arrows while open        -> navigate
+///   * letters/digits/space     -> type-to-filter the list
+///   * Backspace                -> delete a filter character
+///   * Delete                   -> close the highlighted window (no switch)
 ///   * Enter while open         -> commit
 ///   * Esc while open           -> cancel
 ///   * Alt released while open  -> commit
@@ -21,19 +25,29 @@ internal sealed class SwitcherController : IDisposable
 {
     private readonly KeyboardHook _hook = new();
     private readonly SwitcherWindow _switcher = new();
+    private readonly MruTracker _mru = new();
     private AppSettings _settings;
 
     private bool _isOpen;
     private IntPtr _foregroundAtOpen;
+    private List<WindowInfo> _allWindows = new();
+    private readonly StringBuilder _filter = new();
 
     public SwitcherController(AppSettings settings)
     {
         _settings = settings;
         _switcher.ItemActivated += OnItemActivated;
+        _switcher.ItemCloseRequested += OnItemCloseRequested;
         _hook.KeyIntercepted = OnKey;
+        _hook.OnError = ex => Logger.Error("Keyboard hook callback threw", ex);
     }
 
-    public void Start() => _hook.Install();
+    public void Start()
+    {
+        _mru.Start();
+        _hook.Install();
+        Logger.Info("Keyboard hook and MRU tracker started.");
+    }
 
     public void UpdateSettings(AppSettings settings) => _settings = settings;
 
@@ -43,7 +57,6 @@ internal sealed class SwitcherController : IDisposable
         if (_isOpen)
             return HandleWhileOpen(e);
 
-        // Not open yet: only Alt+Tab (down) starts a switch.
         if (e.VkCode == VK_TAB && e.IsKeyDown && e.AltDown)
         {
             Open(backward: e.ShiftDown);
@@ -78,6 +91,14 @@ internal sealed class SwitcherController : IDisposable
                 if (e.IsKeyDown) Cancel();
                 return true;
 
+            case VK_BACK:
+                if (e.IsKeyDown) Backspace();
+                return true;
+
+            case VK_DELETE:
+                if (e.IsKeyDown) CloseSelected();
+                return true;
+
             case VK_MENU:
             case VK_LMENU:
             case VK_RMENU:
@@ -86,32 +107,89 @@ internal sealed class SwitcherController : IDisposable
                 return false;
 
             default:
+                if (e.IsKeyDown && TryMapChar(e.VkCode, out char c))
+                {
+                    AppendFilter(c);
+                    return true;
+                }
                 return false;
         }
+    }
+
+    private static bool TryMapChar(int vk, out char c)
+    {
+        if (vk >= VK_A && vk <= VK_Z) { c = (char)('a' + (vk - VK_A)); return true; }
+        if (vk >= VK_0 && vk <= VK_9) { c = (char)('0' + (vk - VK_0)); return true; }
+        if (vk >= VK_NUMPAD0 && vk <= VK_NUMPAD9) { c = (char)('0' + (vk - VK_NUMPAD0)); return true; }
+        if (vk == VK_SPACE) { c = ' '; return true; }
+        c = '\0';
+        return false;
     }
 
     // ---- State transitions ----
     private void Open(bool backward)
     {
-        _foregroundAtOpen = GetForegroundWindow();
+        try
+        {
+            _foregroundAtOpen = GetForegroundWindow();
+            _filter.Clear();
 
-        var windows = WindowEnumerator.EnumerateAltTabWindows(loadIcons: true);
-        if (windows.Count == 0) return;
+            var windows = WindowEnumerator.EnumerateAltTabWindows(loadIcons: true);
+            windows = _mru.Order(windows); // genuine most-recently-used order
+            _allWindows = windows;
 
-        // Forward: pre-select the previous window (index 1) like classic Alt+Tab.
-        // Backward: pre-select the last window.
-        int initial = backward ? windows.Count - 1 : Math.Min(1, windows.Count - 1);
+            if (_allWindows.Count == 0)
+            {
+                Logger.Info("Alt+Tab pressed but no switchable windows were found.");
+                return;
+            }
 
-        _isOpen = true;
+            // Forward: pre-select the previous window (index 1) like classic Alt+Tab.
+            // Backward: pre-select the last window.
+            int initial = backward ? _allWindows.Count - 1 : Math.Min(1, _allWindows.Count - 1);
 
-        // Break the lone-Alt menu sequence so releasing Alt won't pop a menu bar.
-        if (_settings.PreventAltMenu)
-            InjectDummyKey();
+            _isOpen = true;
 
-        _switcher.ShowSwitcher(windows, initial, _settings, _foregroundAtOpen);
+            // Break the lone-Alt menu sequence so releasing Alt won't pop a menu bar.
+            if (_settings.PreventAltMenu)
+                InjectDummyKey();
+
+            _switcher.ShowSwitcher(_allWindows, initial, _settings, _foregroundAtOpen);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Failed to open the switcher", ex);
+            _isOpen = false;
+        }
     }
 
     private void Navigate(int delta) => _switcher.MoveSelection(delta);
+
+    private void AppendFilter(char c)
+    {
+        _filter.Append(c);
+        ApplyFilter();
+    }
+
+    private void Backspace()
+    {
+        if (_filter.Length == 0) return;
+        _filter.Length--;
+        ApplyFilter();
+    }
+
+    private void ApplyFilter()
+    {
+        string f = _filter.ToString();
+        List<WindowInfo> filtered = string.IsNullOrEmpty(f)
+            ? _allWindows
+            : _allWindows.Where(w => Match(w.Title, f) || Match(w.ProcessName, f)).ToList();
+
+        _switcher.UpdateItems(filtered, selectedIndex: 0, searchText: f);
+    }
+
+    private static bool Match(string haystack, string needle)
+        => haystack.Contains(needle, StringComparison.OrdinalIgnoreCase);
 
     private void Commit()
     {
@@ -119,7 +197,7 @@ internal sealed class SwitcherController : IDisposable
         var target = _switcher.SelectedWindow;
         Close();
         if (target is not null)
-            WindowActivator.Activate(target.Handle);
+            ActivateSafe(target.Handle);
     }
 
     private void Cancel() => Close();
@@ -127,14 +205,59 @@ internal sealed class SwitcherController : IDisposable
     private void Close()
     {
         _isOpen = false;
+        _filter.Clear();
         _switcher.HideSwitcher();
+    }
+
+    private void CloseSelected()
+    {
+        if (!_isOpen) return;
+        var target = _switcher.SelectedWindow;
+        if (target is not null)
+            RemoveAndClose(target);
     }
 
     private void OnItemActivated(WindowInfo window)
     {
-        // Mouse click in the overlay.
+        // Left mouse click in the overlay.
         Close();
-        WindowActivator.Activate(window.Handle);
+        ActivateSafe(window.Handle);
+    }
+
+    private void OnItemCloseRequested(WindowInfo window)
+    {
+        // Middle mouse click in the overlay.
+        if (_isOpen) RemoveAndClose(window);
+    }
+
+    private void RemoveAndClose(WindowInfo window)
+    {
+        try
+        {
+            PostMessage(window.Handle, WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Failed to post WM_CLOSE", ex);
+        }
+
+        _allWindows.RemoveAll(w => w.Handle == window.Handle);
+        if (_allWindows.Count == 0)
+            Close();
+        else
+            ApplyFilter();
+    }
+
+    private static void ActivateSafe(IntPtr handle)
+    {
+        try
+        {
+            WindowActivator.Activate(handle);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Failed to activate window", ex);
+        }
     }
 
     /// <summary>
@@ -153,6 +276,7 @@ internal sealed class SwitcherController : IDisposable
     public void Dispose()
     {
         _hook.Dispose();
+        _mru.Dispose();
         if (Application.Current is not null)
             _switcher.Close();
     }

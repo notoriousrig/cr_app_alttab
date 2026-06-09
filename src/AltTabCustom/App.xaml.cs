@@ -28,6 +28,9 @@ public partial class App : Application
             return;
         }
 
+        InstallExceptionLogging();
+        Logger.Info("AltTabCustom starting up.");
+
         _settings = SettingsStore.Load();
 
         // Keep the saved "start with Windows" flag in sync with the registry.
@@ -48,6 +51,25 @@ public partial class App : Application
         }
 
         CreateTrayIcon();
+    }
+
+    private void InstallExceptionLogging()
+    {
+        DispatcherUnhandledException += (_, args) =>
+        {
+            Logger.Error("Unhandled dispatcher exception", args.Exception);
+            // Keep the tray app (and its hook) alive rather than crashing out.
+            args.Handled = true;
+        };
+
+        AppDomain.CurrentDomain.UnhandledException += (_, args) =>
+            Logger.Error("Unhandled domain exception", args.ExceptionObject as Exception);
+
+        System.Threading.Tasks.TaskScheduler.UnobservedTaskException += (_, args) =>
+        {
+            Logger.Error("Unobserved task exception", args.Exception);
+            args.SetObserved();
+        };
     }
 
     private void CreateTrayIcon()
