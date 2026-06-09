@@ -19,7 +19,7 @@ elevation anywhere.
 - **Navigation**
   - <kbd>Alt</kbd>+<kbd>Tab</kbd> — open / next
   - <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>Tab</kbd> — open / previous
-  - Arrow keys — move selection
+  - Arrow keys — move selection; <kbd>Home</kbd> / <kbd>End</kbd> — jump to first / last
   - **Type to filter** — start typing to narrow the list by window title or
     process name; <kbd>Backspace</kbd> clears a character
   - <kbd>Delete</kbd> — close the highlighted window (without switching to it)

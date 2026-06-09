@@ -83,6 +83,14 @@ internal sealed class SwitcherController : IDisposable
                 if (e.IsKeyDown) Navigate(+1);
                 return true;
 
+            case VK_HOME:
+                if (e.IsKeyDown) _switcher.SelectFirst();
+                return true;
+
+            case VK_END:
+                if (e.IsKeyDown) _switcher.SelectLast();
+                return true;
+
             case VK_RETURN:
                 if (e.IsKeyDown) Commit();
                 return true;

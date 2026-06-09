@@ -130,6 +130,10 @@ public partial class SwitcherWindow : Window
         SetSelection(next);
     }
 
+    public void SelectFirst() => SetSelection(0);
+
+    public void SelectLast() => SetSelection(_items.Count - 1);
+
     private void SetSelection(int index)
     {
         if (_items.Count == 0) { _selectedIndex = -1; return; }

@@ -30,6 +30,8 @@ internal static class NativeMethods
     public const int VK_MENU = 0x12;   // ALT
     public const int VK_LMENU = 0xA4;
     public const int VK_RMENU = 0xA5;
+    public const int VK_END = 0x23;
+    public const int VK_HOME = 0x24;
     public const int VK_LEFT = 0x25;
     public const int VK_UP = 0x26;
     public const int VK_RIGHT = 0x27;
