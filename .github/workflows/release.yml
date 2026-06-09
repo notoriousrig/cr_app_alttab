@@ -1,0 +1,57 @@
+name: release
+
+# Triggered by pushing a version tag (e.g. v1.0.0). Builds the self-contained
+# single-file exe on a Windows runner and publishes a GitHub Release with it
+# attached, giving a permanent, login-free download URL.
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write   # needed to create the release and upload assets
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Publish (Release, self-contained single file)
+        run: >
+          dotnet publish src/AltTabCustom/AltTabCustom.csproj
+          -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=true -o publish
+
+      - name: Create GitHub Release and upload exe
+        uses: softprops/action-gh-release@v2
+        with:
+          files: publish/AltTabCustom.exe
+          fail_on_unmatched_files: true
+          generate_release_notes: true
+          make_latest: true
+          name: AltTabCustom ${{ github.ref_name }}
+          body: |
+            **AltTabCustom** — a customizable, no-admin Alt+Tab window switcher for Windows 11.
+
+            ### Download
+            Grab **`AltTabCustom.exe`** below. It is self-contained (no .NET install
+            needed) and runs as a normal user — **no administrator rights required**.
+            It minimizes to the system tray; right-click the tray icon → **Settings…**.
+
+            > Windows SmartScreen may warn that the publisher is unknown (the exe is
+            > unsigned). Click *More info → Run anyway*.
+
+            ### Highlights
+            - Replaces Alt+Tab via a low-level keyboard hook (no admin)
+            - Type-to-filter search; Delete / middle-click to close a window
+            - True most-recently-used ordering
+            - Customizable item count, columns, fonts, sizes, colors, opacity
+            - Optional start-with-Windows (per-user)
