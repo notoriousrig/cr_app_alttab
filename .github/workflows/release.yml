@@ -1,15 +1,23 @@
 name: release
 
-# Triggered by pushing a version tag (e.g. v1.0.0). Builds the self-contained
-# single-file exe on a Windows runner and publishes a GitHub Release with it
-# attached, giving a permanent, login-free download URL.
+# Triggered by pushing a version tag (e.g. v1.0.0), or run manually from the
+# Actions tab / API with a version input. Builds the self-contained single-file
+# exe on a Windows runner and publishes a GitHub Release with it attached,
+# giving a permanent, login-free download URL. When run manually it also creates
+# the tag (at the chosen ref) as part of publishing the release.
 on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version tag to create (e.g. v1.0.0)"
+        required: true
+        default: "v1.0.0"
 
 permissions:
-  contents: write   # needed to create the release and upload assets
+  contents: write   # needed to create the release, tag, and upload assets
 
 jobs:
   release:
@@ -33,11 +41,12 @@ jobs:
       - name: Create GitHub Release and upload exe
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.event.inputs.version || github.ref_name }}
           files: publish/AltTabCustom.exe
           fail_on_unmatched_files: true
           generate_release_notes: true
           make_latest: true
-          name: AltTabCustom ${{ github.ref_name }}
+          name: AltTabCustom ${{ github.event.inputs.version || github.ref_name }}
           body: |
             **AltTabCustom** — a customizable, no-admin Alt+Tab window switcher for Windows 11.
 
