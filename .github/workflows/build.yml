@@ -1,0 +1,51 @@
+name: build
+
+# Builds AltTabCustom on a real Windows runner — WPF is Windows-only, so this
+# is where we get true compile feedback (the dev container is Linux).
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore
+        run: dotnet restore AltTabCustom.sln
+
+      # Fast, configuration-light compile check (no RID/single-file publish).
+      - name: Build (Debug)
+        run: dotnet build src/AltTabCustom/AltTabCustom.csproj -c Debug --no-restore
+
+      # Style/format verification — informational, never fails the build.
+      - name: Format check
+        continue-on-error: true
+        run: dotnet format AltTabCustom.sln --verify-no-changes --severity info
+
+      # Produce the self-contained single-file exe and upload it as an artifact.
+      - name: Publish (Release, self-contained single file)
+        run: >
+          dotnet publish src/AltTabCustom/AltTabCustom.csproj
+          -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=true -o publish
+
+      - name: Upload exe artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AltTabCustom-win-x64
+          path: publish/AltTabCustom.exe
+          if-no-files-found: error
