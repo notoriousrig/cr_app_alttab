@@ -26,7 +26,14 @@ public sealed class AppSettings
     // ---- Typography ----
     public string FontFamily { get; set; } = "Segoe UI";
     public double FontSize { get; set; } = 18;
-    public bool FontBold { get; set; } = false;
+
+    /// <summary>
+    /// Font weight name, e.g. Thin, ExtraLight, Light, Normal, Medium, SemiBold,
+    /// Bold, ExtraBold, Black. Lets you pick a specific weight of a family such
+    /// as "Light" for Bahnschrift. Anything WPF's FontWeightConverter accepts
+    /// works; unknown values fall back to Normal.
+    /// </summary>
+    public string FontWeight { get; set; } = "Normal";
 
     /// <summary>Also show the owning process name beneath the title.</summary>
     public bool ShowProcessName { get; set; } = true;

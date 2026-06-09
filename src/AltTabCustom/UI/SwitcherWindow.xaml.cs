@@ -220,7 +220,7 @@ public partial class SwitcherWindow : Window
 
         res["ItemFontFamily"] = new FontFamily(string.IsNullOrWhiteSpace(s.FontFamily) ? "Segoe UI" : s.FontFamily);
         res["ItemFontSize"] = s.FontSize;
-        res["ItemFontWeight"] = s.FontBold ? FontWeights.Bold : FontWeights.Normal;
+        res["ItemFontWeight"] = ParseWeight(s.FontWeight);
         res["ProcessFontSize"] = s.ProcessFontSize;
         res["SubTextVisibility"] = s.ShowProcessName ? Visibility.Visible : Visibility.Collapsed;
     }
@@ -244,6 +244,22 @@ public partial class SwitcherWindow : Window
             if (found is not null) return found;
         }
         return null;
+    }
+
+    private static readonly FontWeightConverter WeightConverter = new();
+
+    private static FontWeight ParseWeight(string name)
+    {
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(name) && WeightConverter.ConvertFromString(name) is FontWeight w)
+                return w;
+        }
+        catch
+        {
+            // Unknown weight name — fall back below.
+        }
+        return FontWeights.Normal;
     }
 
     private static SolidColorBrush Frozen(Color c)

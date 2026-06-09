@@ -11,10 +11,18 @@ public partial class SettingsWindow : Window
     /// <summary>Raised with the new settings when the user clicks Save.</summary>
     public event Action<AppSettings>? SettingsSaved;
 
+    // Standard WPF font weights, lightest → heaviest.
+    private static readonly string[] WeightNames =
+    {
+        "Thin", "ExtraLight", "Light", "Normal", "Medium",
+        "SemiBold", "Bold", "ExtraBold", "Black",
+    };
+
     public SettingsWindow(AppSettings current)
     {
         InitializeComponent();
         PopulateFontList();
+        FontWeightBox.ItemsSource = WeightNames;
         LoadInto(current);
     }
 
@@ -37,7 +45,7 @@ public partial class SettingsWindow : Window
 
         FontFamilyBox.Text = s.FontFamily;
         FontSizeBox.Text = s.FontSize.ToString(CultureInfo.InvariantCulture);
-        FontBoldBox.IsChecked = s.FontBold;
+        FontWeightBox.SelectedItem = WeightNames.Contains(s.FontWeight) ? s.FontWeight : "Normal";
         ProcessFontSizeBox.Text = s.ProcessFontSize.ToString(CultureInfo.InvariantCulture);
 
         BackgroundColorBox.Text = s.BackgroundColor;
@@ -68,7 +76,7 @@ public partial class SettingsWindow : Window
 
             FontFamily = string.IsNullOrWhiteSpace(FontFamilyBox.Text) ? d.FontFamily : FontFamilyBox.Text.Trim(),
             FontSize = ParseDouble(FontSizeBox.Text, d.FontSize, 6, 96),
-            FontBold = FontBoldBox.IsChecked == true,
+            FontWeight = FontWeightBox.SelectedItem as string ?? d.FontWeight,
             ProcessFontSize = ParseDouble(ProcessFontSizeBox.Text, d.ProcessFontSize, 6, 72),
 
             BackgroundColor = ValidColor(BackgroundColorBox.Text, d.BackgroundColor),

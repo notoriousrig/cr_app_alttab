@@ -81,12 +81,28 @@ public partial class App : Application
 
         _tray = new Forms.NotifyIcon
         {
-            Icon = System.Drawing.SystemIcons.Application,
+            Icon = LoadAppIcon(),
             Visible = true,
             Text = "AltTabCustom — customizable Alt+Tab",
             ContextMenuStrip = menu,
         };
         _tray.DoubleClick += (_, _) => OpenSettings();
+    }
+
+    /// <summary>Load the bundled app.ico for the tray, falling back to a stock icon.</summary>
+    private static System.Drawing.Icon LoadAppIcon()
+    {
+        try
+        {
+            var uri = new Uri("pack://application:,,,/Assets/app.ico");
+            using var stream = GetResourceStream(uri).Stream;
+            return new System.Drawing.Icon(stream, System.Windows.Forms.SystemInformation.SmallIconSize);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Failed to load tray icon; using default", ex);
+            return System.Drawing.SystemIcons.Application;
+        }
     }
 
     private void OpenSettings()

@@ -39,10 +39,12 @@ jobs:
           -p:PublishSingleFile=true -o publish-sc
 
       - name: Publish framework-dependent (slim, requires .NET 8 Desktop Runtime)
+        # Compression in a single-file bundle is only allowed for self-contained
+        # publishes, so disable it here (NETSDK1176).
         run: >
           dotnet publish src/AltTabCustom/AltTabCustom.csproj
           -c Release -r win-x64 --self-contained false -p:SelfContained=false
-          -p:PublishSingleFile=true -o publish-fd
+          -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=false -o publish-fd
 
       - name: Stage release assets with descriptive names
         shell: pwsh

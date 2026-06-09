@@ -32,7 +32,8 @@ elevation anywhere.
 - **Customizable** (live, via the tray → Settings dialog):
   - Max items on screen, number of columns
   - Item width/height, icon size
-  - Font family, title font size, bold, process‑name sub‑label + size
+  - Font family, **font weight** (Thin → Black, e.g. *Light* for Bahnschrift),
+    title font size, process‑name sub‑label + size
   - Background / selection / text / sub‑text colors, corner radius, opacity
 - **Lightweight tray app** — right‑click the tray icon for Settings / Exit.
 - **Optional start‑with‑Windows** (per‑user, no admin).
@@ -162,7 +163,6 @@ first place to look if Alt+Tab stops responding or a window won't activate.
   the hook callback. On a machine with a very large number of windows this can
   approach Windows' low‑level‑hook timeout; if you ever see a missed first
   press, that's the cause. Subsequent navigation is instant.
-- No custom app icon yet (uses the default application icon in the tray).
 
 ## License
 
