@@ -18,6 +18,16 @@
     <Description>A customizable, no-admin Alt+Tab window switcher for Windows 11.</Description>
   </PropertyGroup>
 
+  <!-- WPF + WinForms both pull their namespaces (System.Windows.Forms,
+       System.Drawing) into the implicit global usings, which collide with WPF's
+       System.Windows / System.Windows.Media (Application, Color, KeyEventArgs).
+       We only touch WinForms/Drawing via the explicit "Forms." alias and
+       fully-qualified names, so drop them from the implicit usings. -->
+  <ItemGroup>
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+
   <!-- Convenient single-file, self-contained publish profile defaults.
        Override on the command line if you prefer framework-dependent. -->
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
