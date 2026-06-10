@@ -42,9 +42,10 @@ elevation anywhere.
   flips to the compact one. The crossover width is configurable, and
   auto-switching can be turned off (always uses the Docked profile).
 - **Custom icon rules** — force a specific icon for windows whose **title** or
-  **process name** matches (contains / equals / regex). Point a rule at a
-  `.ico`/`.png`; e.g. *“title contains calendar → cal.ico”*. Rules are checked
-  top to bottom, first match wins, and edited in **Settings → Icon rules**.
+  **process name** matches (contains / equals / regex), with an optional second
+  condition ANDed in (e.g. *title contains “calendar” **and** process contains
+  “outlook”*). Point a rule at a `.ico`/`.png`. Rules are checked top to bottom,
+  first match wins, and edited in **Settings → Icon rules**.
 - **Customizable** (per profile, via the tray → Settings dialog):
   - Max items on screen, number of columns
   - Item width/height, icon size

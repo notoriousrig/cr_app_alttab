@@ -20,30 +20,52 @@ public enum RuleMatch
 
 /// <summary>
 /// A user-defined override that forces a specific icon for any window whose
-/// title or process name matches. Rules are evaluated in order; the first match
-/// wins. All matching is case-insensitive.
+/// title or process name matches. A rule may add an optional second condition
+/// (e.g. title contains X <em>and</em> process contains Y); when present both
+/// must match. Rules are evaluated in order; the first match wins. All matching
+/// is case-insensitive.
 /// </summary>
 public sealed class IconRule
 {
     public bool Enabled { get; set; } = true;
+
     public RuleField Field { get; set; } = RuleField.Title;
     public RuleMatch Match { get; set; } = RuleMatch.Contains;
     public string Pattern { get; set; } = string.Empty;
 
+    // Optional second condition, ANDed with the first. Active only when Pattern2
+    // is non-empty; null on rules saved before this was added.
+    public RuleField? Field2 { get; set; }
+    public RuleMatch? Match2 { get; set; }
+    public string? Pattern2 { get; set; }
+
     /// <summary>Path to a .ico / .png (or other WPF-loadable image) to use.</summary>
     public string IconPath { get; set; } = string.Empty;
+
+    /// <summary>Whether the second (AND) condition is in use.</summary>
+    public bool HasSecondCondition => !string.IsNullOrWhiteSpace(Pattern2);
 
     /// <summary>True if this rule should be tested against the given window.</summary>
     public bool Matches(string? title, string? processName)
     {
         if (!Enabled || string.IsNullOrWhiteSpace(Pattern)) return false;
+        if (!MatchOne(Field, Match, Pattern, title, processName)) return false;
 
-        string value = (Field == RuleField.Title ? title : processName) ?? string.Empty;
-        return Match switch
+        if (HasSecondCondition &&
+            !MatchOne(Field2 ?? RuleField.ProcessName, Match2 ?? RuleMatch.Contains, Pattern2!, title, processName))
+            return false;
+
+        return true;
+    }
+
+    private static bool MatchOne(RuleField field, RuleMatch match, string pattern, string? title, string? processName)
+    {
+        string value = (field == RuleField.Title ? title : processName) ?? string.Empty;
+        return match switch
         {
-            RuleMatch.Contains => value.Contains(Pattern, StringComparison.OrdinalIgnoreCase),
-            RuleMatch.Equals => string.Equals(value, Pattern, StringComparison.OrdinalIgnoreCase),
-            RuleMatch.Regex => SafeRegex(value, Pattern),
+            RuleMatch.Contains => value.Contains(pattern, StringComparison.OrdinalIgnoreCase),
+            RuleMatch.Equals => string.Equals(value, pattern, StringComparison.OrdinalIgnoreCase),
+            RuleMatch.Regex => SafeRegex(value, pattern),
             _ => false,
         };
     }
@@ -67,17 +89,25 @@ public sealed class IconRule
     {
         get
         {
-            string fieldName = Field == RuleField.Title ? "Title" : "Process";
-            string verb = Match switch
-            {
-                RuleMatch.Equals => "equals",
-                RuleMatch.Regex => "matches",
-                _ => "contains",
-            };
             string file = string.IsNullOrWhiteSpace(IconPath) ? "(no icon)" : Path.GetFileName(IconPath);
             string prefix = Enabled ? string.Empty : "(off) ";
-            return $"{prefix}{fieldName} {verb} “{Pattern}” → {file}";
+            string text = Describe(Field, Match, Pattern);
+            if (HasSecondCondition)
+                text += " and " + Describe(Field2 ?? RuleField.ProcessName, Match2 ?? RuleMatch.Contains, Pattern2!);
+            return $"{prefix}{text} → {file}";
         }
+    }
+
+    private static string Describe(RuleField field, RuleMatch match, string pattern)
+    {
+        string fieldName = field == RuleField.Title ? "Title" : "Process";
+        string verb = match switch
+        {
+            RuleMatch.Equals => "equals",
+            RuleMatch.Regex => "matches",
+            _ => "contains",
+        };
+        return $"{fieldName} {verb} “{pattern}”";
     }
 
     public IconRule Clone() => new()
@@ -86,6 +116,9 @@ public sealed class IconRule
         Field = Field,
         Match = Match,
         Pattern = Pattern,
+        Field2 = Field2,
+        Match2 = Match2,
+        Pattern2 = Pattern2,
         IconPath = IconPath,
     };
 }

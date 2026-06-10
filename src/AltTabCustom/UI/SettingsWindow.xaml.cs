@@ -85,6 +85,13 @@ public partial class SettingsWindow : Window
         PatternBox.Text = rule.Pattern;
         IconPathBox.Text = rule.IconPath;
         RuleEnabledBox.IsChecked = rule.Enabled;
+
+        // Second (AND) condition — default its field to the opposite of the first.
+        RuleAndBox.IsChecked = rule.HasSecondCondition;
+        var field2 = rule.Field2 ?? (rule.Field == RuleField.Title ? RuleField.ProcessName : RuleField.Title);
+        FieldCombo2.SelectedIndex = field2 == RuleField.Title ? 0 : 1;
+        MatchCombo2.SelectedIndex = (int)(rule.Match2 ?? RuleMatch.Contains);
+        PatternBox2.Text = rule.Pattern2 ?? string.Empty;
         _loadingRule = false;
     }
 
@@ -97,6 +104,20 @@ public partial class SettingsWindow : Window
         rule.Pattern = PatternBox.Text;
         rule.IconPath = IconPathBox.Text;
         rule.Enabled = RuleEnabledBox.IsChecked == true;
+
+        if (RuleAndBox.IsChecked == true)
+        {
+            rule.Field2 = FieldCombo2.SelectedIndex == 1 ? RuleField.ProcessName : RuleField.Title;
+            rule.Match2 = (RuleMatch)Math.Max(0, MatchCombo2.SelectedIndex);
+            rule.Pattern2 = PatternBox2.Text;
+        }
+        else
+        {
+            rule.Field2 = null;
+            rule.Match2 = null;
+            rule.Pattern2 = null;
+        }
+
         RulesList.Items.Refresh(); // update the summary text
     }
 

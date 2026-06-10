@@ -142,6 +142,36 @@
                                         <TextBlock Grid.Column="0" Text="Pattern" Style="{StaticResource FieldLabel}" />
                                         <TextBox Grid.Column="1" x:Name="PatternBox" TextChanged="RuleDetail_Changed" />
                                     </Grid>
+
+                                    <CheckBox x:Name="RuleAndBox" Content="Also require a second condition (AND)"
+                                              Click="RuleDetail_Changed" Margin="0,8,0,2" />
+                                    <Grid Margin="0,2" IsEnabled="{Binding IsChecked, ElementName=RuleAndBox}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="80" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="And" Style="{StaticResource FieldLabel}" />
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                            <ComboBox x:Name="FieldCombo2" Width="130" SelectionChanged="RuleDetail_Changed">
+                                                <ComboBoxItem Content="Title" />
+                                                <ComboBoxItem Content="Process name" />
+                                            </ComboBox>
+                                            <ComboBox x:Name="MatchCombo2" Width="140" Margin="8,0,0,0" SelectionChanged="RuleDetail_Changed">
+                                                <ComboBoxItem Content="contains" />
+                                                <ComboBoxItem Content="equals" />
+                                                <ComboBoxItem Content="matches (regex)" />
+                                            </ComboBox>
+                                        </StackPanel>
+                                    </Grid>
+                                    <Grid Margin="0,2" IsEnabled="{Binding IsChecked, ElementName=RuleAndBox}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="80" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Pattern" Style="{StaticResource FieldLabel}" />
+                                        <TextBox Grid.Column="1" x:Name="PatternBox2" TextChanged="RuleDetail_Changed" />
+                                    </Grid>
+
                                     <Grid Margin="0,2">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="80" />

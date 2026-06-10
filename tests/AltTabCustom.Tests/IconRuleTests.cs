@@ -39,6 +39,33 @@ public class IconRuleTests
     }
 
     [Fact]
+    public void SecondCondition_RequiresBothToMatch()
+    {
+        var rule = new IconRule
+        {
+            Field = RuleField.Title, Match = RuleMatch.Contains, Pattern = "calendar",
+            Field2 = RuleField.ProcessName, Match2 = RuleMatch.Contains, Pattern2 = "outlook",
+        };
+
+        Assert.True(rule.Matches("My Calendar", "OUTLOOK"));      // both match
+        Assert.False(rule.Matches("My Calendar", "chrome"));      // process fails
+        Assert.False(rule.Matches("Inbox", "OUTLOOK"));           // title fails
+    }
+
+    [Fact]
+    public void EmptySecondPattern_IsIgnored_RuleActsOnFirstOnly()
+    {
+        var rule = new IconRule
+        {
+            Field = RuleField.Title, Match = RuleMatch.Contains, Pattern = "calendar",
+            Field2 = RuleField.ProcessName, Match2 = RuleMatch.Contains, Pattern2 = "",
+        };
+
+        Assert.False(rule.HasSecondCondition);
+        Assert.True(rule.Matches("My Calendar", "anything"));
+    }
+
+    [Fact]
     public void DisabledRule_NeverMatches()
     {
         var rule = new IconRule { Enabled = false, Match = RuleMatch.Contains, Pattern = "calendar" };
