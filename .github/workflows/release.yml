@@ -103,6 +103,11 @@ jobs:
             - App icon, optional acrylic background (experimental), logging, and
               optional start-with-Windows (per-user).
 
+            ### Fixes in 1.5.1
+            - The first Alt+Tab after a monitor/resolution change (e.g. docking or
+              undocking) is now centered correctly instead of appearing in the wrong
+              spot and only correcting on the next draw.
+
             ### New in 1.5
             - **Refreshed Settings** — cleaner, card-based layout with a modern light
               theme (the switcher overlay is unchanged).
