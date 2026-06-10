@@ -1,0 +1,89 @@
+<UserControl x:Class="AltTabCustom.UI.ProfileEditorControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             FontFamily="Segoe UI" FontSize="13">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="2">
+            <TextBlock Text="Layout" FontWeight="Bold" Margin="0,0,0,6" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="200" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition />
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Max items on screen" VerticalAlignment="Center" Margin="0,4" />
+                <TextBox  Grid.Row="0" Grid.Column="1" x:Name="MaxItemsBox" Margin="0,4" />
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Columns" VerticalAlignment="Center" Margin="0,4" />
+                <TextBox  Grid.Row="1" Grid.Column="1" x:Name="ColumnsBox" Margin="0,4" />
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Item width (px)" VerticalAlignment="Center" Margin="0,4" />
+                <TextBox  Grid.Row="2" Grid.Column="1" x:Name="ItemWidthBox" Margin="0,4" />
+
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Item height (px)" VerticalAlignment="Center" Margin="0,4" />
+                <TextBox  Grid.Row="3" Grid.Column="1" x:Name="ItemHeightBox" Margin="0,4" />
+
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="Icon size (px)" VerticalAlignment="Center" Margin="0,4" />
+                <TextBox  Grid.Row="4" Grid.Column="1" x:Name="IconSizeBox" Margin="0,4" />
+            </Grid>
+
+            <TextBlock Text="Typography" FontWeight="Bold" Margin="0,16,0,6" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="200" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition />
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Font family" VerticalAlignment="Center" Margin="0,4" />
+                <ComboBox  Grid.Row="0" Grid.Column="1" x:Name="FontFamilyBox" Margin="0,4" IsEditable="True" />
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Title font size" VerticalAlignment="Center" Margin="0,4" />
+                <TextBox  Grid.Row="1" Grid.Column="1" x:Name="FontSizeBox" Margin="0,4" />
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Font weight" VerticalAlignment="Center" Margin="0,4" />
+                <ComboBox  Grid.Row="2" Grid.Column="1" x:Name="FontWeightBox" Margin="0,4" />
+
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Process font size" VerticalAlignment="Center" Margin="0,4" />
+                <TextBox  Grid.Row="3" Grid.Column="1" x:Name="ProcessFontSizeBox" Margin="0,4" />
+
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="Show process name" VerticalAlignment="Center" Margin="0,4" />
+                <CheckBox Grid.Row="4" Grid.Column="1" x:Name="ShowProcessNameBox" VerticalAlignment="Center" Margin="0,4" />
+            </Grid>
+
+            <TextBlock Text="Colors (hex #AARRGGBB or #RRGGBB)" FontWeight="Bold" Margin="0,16,0,6" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="200" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition />
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Background" VerticalAlignment="Center" Margin="0,4" />
+                <TextBox  Grid.Row="0" Grid.Column="1" x:Name="BackgroundColorBox" Margin="0,4" />
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Selection" VerticalAlignment="Center" Margin="0,4" />
+                <TextBox  Grid.Row="1" Grid.Column="1" x:Name="SelectionColorBox" Margin="0,4" />
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Text" VerticalAlignment="Center" Margin="0,4" />
+                <TextBox  Grid.Row="2" Grid.Column="1" x:Name="TextColorBox" Margin="0,4" />
+
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Sub-text" VerticalAlignment="Center" Margin="0,4" />
+                <TextBox  Grid.Row="3" Grid.Column="1" x:Name="SubTextColorBox" Margin="0,4" />
+
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="Corner radius" VerticalAlignment="Center" Margin="0,4" />
+                <TextBox  Grid.Row="4" Grid.Column="1" x:Name="CornerRadiusBox" Margin="0,4" />
+
+                <TextBlock Grid.Row="5" Grid.Column="0" Text="Window opacity (0.1–1.0)" VerticalAlignment="Center" Margin="0,4" />
+                <TextBox  Grid.Row="5" Grid.Column="1" x:Name="OpacityBox" Margin="0,4" />
+            </Grid>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

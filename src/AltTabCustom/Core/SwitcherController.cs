@@ -162,7 +162,11 @@ internal sealed class SwitcherController : IDisposable
             if (_settings.PreventAltMenu)
                 InjectDummyKey();
 
-            _switcher.ShowSwitcher(_allWindows, initial, _settings, _foregroundAtOpen);
+            // Pick the display profile for the monitor the switcher will appear on.
+            double effectiveWidth = DisplayMetrics.EffectiveWidth(_foregroundAtOpen);
+            var profile = _settings.ResolveProfile(effectiveWidth);
+
+            _switcher.ShowSwitcher(_allWindows, initial, profile, _settings.ClickToActivate, _foregroundAtOpen);
         }
         catch (Exception ex)
         {

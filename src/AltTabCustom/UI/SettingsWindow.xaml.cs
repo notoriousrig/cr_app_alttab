@@ -1,8 +1,9 @@
 using System.Globalization;
-using System.Linq;
 using System.Windows;
+using System.Windows.Interop;
 using System.Windows.Media;
 using AltTabCustom.Settings;
+using Forms = System.Windows.Forms;
 
 namespace AltTabCustom.UI;
 
@@ -11,51 +12,21 @@ public partial class SettingsWindow : Window
     /// <summary>Raised with the new settings when the user clicks Save.</summary>
     public event Action<AppSettings>? SettingsSaved;
 
-    // Standard WPF font weights, lightest → heaviest.
-    private static readonly string[] WeightNames =
-    {
-        "Thin", "ExtraLight", "Light", "Normal", "Medium",
-        "SemiBold", "Bold", "ExtraBold", "Black",
-    };
-
     public SettingsWindow(AppSettings current)
     {
         InitializeComponent();
-        PopulateFontList();
-        FontWeightBox.ItemsSource = WeightNames;
         LoadInto(current);
-    }
-
-    private void PopulateFontList()
-    {
-        var names = Fonts.SystemFontFamilies
-            .Select(f => f.Source)
-            .OrderBy(n => n, StringComparer.OrdinalIgnoreCase)
-            .ToList();
-        FontFamilyBox.ItemsSource = names;
+        Loaded += (_, _) => UpdateScreenHint();
     }
 
     private void LoadInto(AppSettings s)
     {
-        MaxItemsBox.Text = s.MaxVisibleItems.ToString(CultureInfo.InvariantCulture);
-        ColumnsBox.Text = s.Columns.ToString(CultureInfo.InvariantCulture);
-        ItemWidthBox.Text = s.ItemWidth.ToString(CultureInfo.InvariantCulture);
-        ItemHeightBox.Text = s.ItemHeight.ToString(CultureInfo.InvariantCulture);
-        IconSizeBox.Text = s.IconSize.ToString(CultureInfo.InvariantCulture);
+        DockedEditor.LoadFrom(s.Docked);
+        LaptopEditor.LoadFrom(s.Laptop);
 
-        FontFamilyBox.Text = s.FontFamily;
-        FontSizeBox.Text = s.FontSize.ToString(CultureInfo.InvariantCulture);
-        FontWeightBox.SelectedItem = WeightNames.Contains(s.FontWeight) ? s.FontWeight : "Normal";
-        ProcessFontSizeBox.Text = s.ProcessFontSize.ToString(CultureInfo.InvariantCulture);
+        EnableProfilesBox.IsChecked = s.EnableDisplayProfiles;
+        ThresholdBox.Text = s.LargeDisplayMinWidth.ToString(CultureInfo.InvariantCulture);
 
-        BackgroundColorBox.Text = s.BackgroundColor;
-        SelectionColorBox.Text = s.SelectionColor;
-        TextColorBox.Text = s.TextColor;
-        SubTextColorBox.Text = s.SubTextColor;
-        CornerRadiusBox.Text = s.CornerRadius.ToString(CultureInfo.InvariantCulture);
-        OpacityBox.Text = s.WindowOpacity.ToString(CultureInfo.InvariantCulture);
-
-        ShowProcessNameBox.IsChecked = s.ShowProcessName;
         StartWithWindowsBox.IsChecked = s.StartWithWindows;
         PreventAltMenuBox.IsChecked = s.PreventAltMenu;
         ClickToActivateBox.IsChecked = s.ClickToActivate;
@@ -63,33 +34,18 @@ public partial class SettingsWindow : Window
 
     private void Save_Click(object sender, RoutedEventArgs e)
     {
-        // Start from defaults, then overlay parsed values (falling back to the
-        // default when a field can't be parsed, so a typo can't corrupt config).
         var d = new AppSettings();
         var s = new AppSettings
         {
-            MaxVisibleItems = ParseInt(MaxItemsBox.Text, d.MaxVisibleItems, 1, 100),
-            Columns = ParseInt(ColumnsBox.Text, d.Columns, 1, 12),
-            ItemWidth = ParseDouble(ItemWidthBox.Text, d.ItemWidth, 80, 4000),
-            ItemHeight = ParseDouble(ItemHeightBox.Text, d.ItemHeight, 24, 1000),
-            IconSize = ParseDouble(IconSizeBox.Text, d.IconSize, 8, 256),
-
-            FontFamily = string.IsNullOrWhiteSpace(FontFamilyBox.Text) ? d.FontFamily : FontFamilyBox.Text.Trim(),
-            FontSize = ParseDouble(FontSizeBox.Text, d.FontSize, 6, 96),
-            FontWeight = FontWeightBox.SelectedItem as string ?? d.FontWeight,
-            ProcessFontSize = ParseDouble(ProcessFontSizeBox.Text, d.ProcessFontSize, 6, 72),
-
-            BackgroundColor = ValidColor(BackgroundColorBox.Text, d.BackgroundColor),
-            SelectionColor = ValidColor(SelectionColorBox.Text, d.SelectionColor),
-            TextColor = ValidColor(TextColorBox.Text, d.TextColor),
-            SubTextColor = ValidColor(SubTextColorBox.Text, d.SubTextColor),
-            CornerRadius = ParseDouble(CornerRadiusBox.Text, d.CornerRadius, 0, 60),
-            WindowOpacity = ParseDouble(OpacityBox.Text, d.WindowOpacity, 0.1, 1.0),
-
-            ShowProcessName = ShowProcessNameBox.IsChecked == true,
             StartWithWindows = StartWithWindowsBox.IsChecked == true,
             PreventAltMenu = PreventAltMenuBox.IsChecked == true,
             ClickToActivate = ClickToActivateBox.IsChecked == true,
+
+            EnableDisplayProfiles = EnableProfilesBox.IsChecked == true,
+            LargeDisplayMinWidth = FieldParse.Dbl(ThresholdBox.Text, d.LargeDisplayMinWidth, 400, 20000),
+
+            Docked = DockedEditor.ToProfile(),
+            Laptop = LaptopEditor.ToProfile(),
         };
 
         SettingsSaved?.Invoke(s);
@@ -100,24 +56,25 @@ public partial class SettingsWindow : Window
 
     private void Cancel_Click(object sender, RoutedEventArgs e) => Close();
 
-    private static int ParseInt(string text, int fallback, int min, int max)
-        => int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out int v)
-            ? Math.Clamp(v, min, max) : fallback;
-
-    private static double ParseDouble(string text, double fallback, double min, double max)
-        => double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out double v)
-            ? Math.Clamp(v, min, max) : fallback;
-
-    private static string ValidColor(string text, string fallback)
+    /// <summary>Show the effective width of this window's monitor to help pick a threshold.</summary>
+    private void UpdateScreenHint()
     {
         try
         {
-            _ = ColorConverter.ConvertFromString(text.Trim());
-            return text.Trim();
+            IntPtr hwnd = new WindowInteropHelper(this).Handle;
+            var screen = hwnd != IntPtr.Zero ? Forms.Screen.FromHandle(hwnd) : Forms.Screen.PrimaryScreen!;
+            double scale = VisualTreeHelper.GetDpi(this).DpiScaleX;
+            if (scale <= 0) scale = 1;
+            double effective = screen.Bounds.Width / scale;
+
+            double threshold = FieldParse.Dbl(ThresholdBox.Text, 2560, 400, 20000);
+            string which = effective >= threshold ? "Docked" : "Laptop";
+            CurrentScreenHint.Text =
+                $"This screen is ≈ {effective:0} px effective wide — currently the “{which}” profile.";
         }
         catch
         {
-            return fallback;
+            CurrentScreenHint.Text = string.Empty;
         }
     }
 }

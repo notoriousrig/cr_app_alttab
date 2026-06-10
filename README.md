@@ -29,7 +29,13 @@ elevation anywhere.
 - **True MRU ordering** — the list is ordered most-recently-used (tracked via a
   focus hook), so a quick Alt+Tab flips to your last window just like the
   system switcher.
-- **Customizable** (live, via the tray → Settings dialog):
+- **Display profiles (dock / undock)** — two independent visual profiles,
+  **Docked** (large monitor) and **Laptop** (small screen), are switched
+  automatically based on the effective width of the monitor the switcher opens
+  on. Plug into a 49″ ultrawide and it uses your roomy layout; unplug and it
+  flips to the compact one. The crossover width is configurable, and
+  auto-switching can be turned off (always uses the Docked profile).
+- **Customizable** (per profile, via the tray → Settings dialog):
   - Max items on screen, number of columns
   - Item width/height, icon size
   - Font family, **font weight** (Thin → Black, e.g. *Light* for Bahnschrift),
@@ -123,6 +129,7 @@ src/AltTabCustom/
   Core/
     SwitcherController.cs   # the Alt+Tab state machine (nav, search, close)
     MruTracker.cs           # focus-history hook for most-recently-used ordering
+    DisplayMetrics.cs       # effective monitor width (for profile switching)
     Logger.cs               # best-effort logging to %AppData%
     StartupManager.cs       # per-user "start with Windows"
   Interop/
@@ -133,12 +140,15 @@ src/AltTabCustom/
     IconHelper.cs           # window/process icon -> WPF ImageSource
     WindowInfo.cs
   Settings/
-    AppSettings.cs          # the customizable options
-    SettingsStore.cs        # JSON load/save under %AppData%
+    AppSettings.cs          # behavior + profile switching + the two profiles
+    DisplayProfile.cs       # per-display visual settings (Docked / Laptop)
+    SettingsStore.cs        # JSON load/save + v1->v2 migration, under %AppData%
   UI/
-    SwitcherWindow.xaml(.cs)# the overlay
+    SwitcherWindow.xaml(.cs)    # the overlay
     SwitcherItem.cs
-    SettingsWindow.xaml(.cs)# the settings dialog
+    ProfileEditorControl.xaml(.cs)  # editor for one display profile
+    FieldParse.cs               # tolerant settings-field parsing
+    SettingsWindow.xaml(.cs)    # the tabbed settings dialog
 ```
 
 ## Troubleshooting

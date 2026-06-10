@@ -14,7 +14,8 @@ public partial class SwitcherWindow : Window
 {
     private readonly List<SwitcherItem> _items = new();
     private int _selectedIndex = -1;
-    private AppSettings _settings = new();
+    private DisplayProfile _profile = new();
+    private bool _clickToActivate = true;
 
     private IntPtr _targetMonitor;
 
@@ -52,11 +53,12 @@ public partial class SwitcherWindow : Window
     /// Populate, style, position and display the switcher.
     /// </summary>
     public void ShowSwitcher(IReadOnlyList<WindowInfo> windows, int selectedIndex,
-        AppSettings settings, IntPtr targetMonitorWindow)
+        DisplayProfile profile, bool clickToActivate, IntPtr targetMonitorWindow)
     {
-        _settings = settings;
+        _profile = profile;
+        _clickToActivate = clickToActivate;
         _targetMonitor = targetMonitorWindow;
-        ApplyTheme(settings);
+        ApplyTheme(profile);
         SetSearchText(string.Empty);
 
         PopulateItems(windows, selectedIndex);
@@ -68,7 +70,7 @@ public partial class SwitcherWindow : Window
         // The items panel is realized during the layout pass triggered by Show();
         // apply the column count once it exists.
         Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded,
-            () => ApplyColumns(_settings.Columns));
+            () => ApplyColumns(_profile.Columns));
 
         SetSelection(selectedIndex);
         PositionOnMonitor(_targetMonitor);
@@ -83,7 +85,7 @@ public partial class SwitcherWindow : Window
         SetSearchText(searchText);
         PopulateItems(windows, selectedIndex);
         Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded,
-            () => ApplyColumns(_settings.Columns));
+            () => ApplyColumns(_profile.Columns));
         SetSelection(selectedIndex);
         // Size changes with the filtered count, so re-center after layout settles.
         Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded,
@@ -99,7 +101,7 @@ public partial class SwitcherWindow : Window
         ItemsHost.ItemsSource = null;
         ItemsHost.ItemsSource = _items;
 
-        ConstrainHeight(_settings);
+        ConstrainHeight(_profile);
     }
 
     private void SetSearchText(string text)
@@ -160,7 +162,7 @@ public partial class SwitcherWindow : Window
 
     private void Item_Click(object sender, MouseButtonEventArgs e)
     {
-        if (!_settings.ClickToActivate) return;
+        if (!_clickToActivate) return;
         if (sender is FrameworkElement { DataContext: SwitcherItem item })
             ItemActivated?.Invoke(item.Window);
     }
@@ -176,12 +178,12 @@ public partial class SwitcherWindow : Window
         }
     }
 
-    private void ConstrainHeight(AppSettings settings)
+    private void ConstrainHeight(DisplayProfile p)
     {
-        int columns = Math.Max(1, settings.Columns);
-        int rows = (int)Math.Ceiling(Math.Max(1, settings.MaxVisibleItems) / (double)columns);
+        int columns = Math.Max(1, p.Columns);
+        int rows = (int)Math.Ceiling(Math.Max(1, p.MaxVisibleItems) / (double)columns);
         // Item height + its 4px top/bottom margins.
-        Scroller.MaxHeight = rows * (settings.ItemHeight + 8);
+        Scroller.MaxHeight = rows * (p.ItemHeight + 8);
     }
 
     private void PositionOnMonitor(IntPtr targetWindow)
@@ -207,7 +209,7 @@ public partial class SwitcherWindow : Window
             SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
     }
 
-    private void ApplyTheme(AppSettings s)
+    private void ApplyTheme(DisplayProfile s)
     {
         var res = Resources;
         res["BackgroundBrush"] = Frozen(ColorFromHex(s.BackgroundColor));
