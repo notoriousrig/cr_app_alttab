@@ -12,11 +12,13 @@ namespace AltTabCustom.UI;
 public sealed class SwitcherItem : INotifyPropertyChanged
 {
     private bool _isSelected;
+    private ImageSource? _icon;
 
     public SwitcherItem(WindowInfo window, string query = "")
     {
         Window = window;
         Query = query;
+        _icon = window.Icon;
     }
 
     public WindowInfo Window { get; }
@@ -26,8 +28,27 @@ public sealed class SwitcherItem : INotifyPropertyChanged
 
     public string Title => Window.Title;
     public string ProcessName => Window.ProcessName;
-    public ImageSource? Icon => Window.Icon;
     public IntPtr Handle => Window.Handle;
+
+    /// <summary>
+    /// The icon. May be null initially and filled in asynchronously (icons are
+    /// loaded off the keyboard-hook hot path) — hence the change notification.
+    /// </summary>
+    public ImageSource? Icon
+    {
+        get => _icon;
+        private set
+        {
+            _icon = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public void SetIcon(ImageSource? icon)
+    {
+        Window.Icon = icon;
+        Icon = icon;
+    }
 
     public bool IsSelected
     {

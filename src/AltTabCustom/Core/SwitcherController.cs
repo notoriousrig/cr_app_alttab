@@ -162,7 +162,9 @@ internal sealed class SwitcherController : IDisposable
             _foregroundAtOpen = GetForegroundWindow();
             _filter.Clear();
 
-            var windows = WindowEnumerator.EnumerateAltTabWindows(loadIcons: true);
+            // Skip icon loading here — it's the slow part and would run inside the
+            // keyboard-hook callback. The overlay loads icons asynchronously.
+            var windows = WindowEnumerator.EnumerateAltTabWindows(loadIcons: false);
             windows = _mru.Order(windows); // genuine most-recently-used order
             _allWindows = windows;
 

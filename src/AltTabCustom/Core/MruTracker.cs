@@ -14,12 +14,9 @@ namespace AltTabCustom.Core;
 /// </summary>
 internal sealed class MruTracker : IDisposable
 {
-    private readonly List<IntPtr> _order = new();   // most-recent first
-    private readonly object _gate = new();
+    private readonly MruOrder _order = new();       // pure ordering logic
     private readonly WinEventDelegate _proc;        // kept alive to avoid GC
     private IntPtr _hook = IntPtr.Zero;
-
-    private const int MaxTracked = 256;
 
     public MruTracker()
     {
@@ -34,7 +31,7 @@ internal sealed class MruTracker : IDisposable
 
         // Seed with whatever is currently focused.
         IntPtr fg = GetForegroundWindow();
-        if (fg != IntPtr.Zero) Touch(fg);
+        if (fg != IntPtr.Zero) _order.Touch(fg);
     }
 
     private void OnForeground(IntPtr hWinEventHook, uint eventType, IntPtr hwnd,
@@ -42,38 +39,11 @@ internal sealed class MruTracker : IDisposable
     {
         // Only care about top-level window foreground changes.
         if (idObject != OBJID_WINDOW || hwnd == IntPtr.Zero) return;
-        Touch(hwnd);
+        _order.Touch(hwnd);
     }
 
-    private void Touch(IntPtr hwnd)
-    {
-        lock (_gate)
-        {
-            _order.Remove(hwnd);
-            _order.Insert(0, hwnd);
-            if (_order.Count > MaxTracked)
-                _order.RemoveRange(MaxTracked, _order.Count - MaxTracked);
-        }
-    }
-
-    /// <summary>
-    /// Returns the windows ordered most-recently-used first. Windows we have
-    /// never seen focused keep their incoming (Z-order) position, after the
-    /// tracked ones, because the sort is stable.
-    /// </summary>
-    public List<WindowInfo> Order(List<WindowInfo> windows)
-    {
-        lock (_gate)
-        {
-            return windows
-                .OrderBy(w =>
-                {
-                    int i = _order.IndexOf(w.Handle);
-                    return i < 0 ? int.MaxValue : i;
-                })
-                .ToList();
-        }
-    }
+    /// <summary>Order windows most-recently-used first (see <see cref="MruOrder"/>).</summary>
+    public List<WindowInfo> Order(List<WindowInfo> windows) => _order.Order(windows);
 
     public void Dispose()
     {

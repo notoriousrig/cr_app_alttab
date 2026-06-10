@@ -38,6 +38,10 @@
     <Resource Include="Assets\app.ico" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="AltTabCustom.Tests" />
+  </ItemGroup>
+
   <!-- Convenient single-file, self-contained publish profile defaults.
        Override on the command line if you prefer framework-dependent. -->
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">

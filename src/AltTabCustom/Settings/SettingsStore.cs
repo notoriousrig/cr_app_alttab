@@ -26,31 +26,36 @@ public static class SettingsStore
         try
         {
             if (File.Exists(FilePath))
-            {
-                string json = File.ReadAllText(FilePath);
-
-                if (JsonNode.Parse(json) is JsonObject obj)
-                {
-                    bool hasProfiles = obj.ContainsKey("Docked") || obj.ContainsKey("Laptop");
-                    bool looksLegacy = !hasProfiles &&
-                        (obj.ContainsKey("FontSize") || obj.ContainsKey("MaxVisibleItems") || obj.ContainsKey("IconSize"));
-
-                    if (looksLegacy)
-                    {
-                        var legacy = JsonSerializer.Deserialize<LegacyV1>(json, JsonOptions) ?? new LegacyV1();
-                        return Migrate(legacy);
-                    }
-                }
-
-                var settings = JsonSerializer.Deserialize<AppSettings>(json, JsonOptions);
-                if (settings is not null) return Normalize(settings);
-            }
+                return FromJson(File.ReadAllText(FilePath));
         }
         catch
         {
             // Corrupt or unreadable file — fall back to defaults rather than crash.
         }
         return new AppSettings();
+    }
+
+    /// <summary>
+    /// Parse settings JSON, transparently migrating the flat v1 format to v2.
+    /// Exposed (internal) for unit testing.
+    /// </summary>
+    internal static AppSettings FromJson(string json)
+    {
+        if (JsonNode.Parse(json) is JsonObject obj)
+        {
+            bool hasProfiles = obj.ContainsKey("Docked") || obj.ContainsKey("Laptop");
+            bool looksLegacy = !hasProfiles &&
+                (obj.ContainsKey("FontSize") || obj.ContainsKey("MaxVisibleItems") || obj.ContainsKey("IconSize"));
+
+            if (looksLegacy)
+            {
+                var legacy = JsonSerializer.Deserialize<LegacyV1>(json, JsonOptions) ?? new LegacyV1();
+                return Migrate(legacy);
+            }
+        }
+
+        var settings = JsonSerializer.Deserialize<AppSettings>(json, JsonOptions);
+        return settings is not null ? Normalize(settings) : new AppSettings();
     }
 
     public static void Save(AppSettings settings)

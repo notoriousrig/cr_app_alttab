@@ -14,6 +14,7 @@ public partial class SwitcherWindow : Window
 {
     private readonly List<SwitcherItem> _items = new();
     private int _selectedIndex = -1;
+    private int _iconGeneration;
     private DisplayProfile _profile = new();
     private bool _clickToActivate = true;
     private bool _acrylic;
@@ -78,6 +79,7 @@ public partial class SwitcherWindow : Window
 
         SetSelection(selectedIndex);
         PositionOnMonitor(_targetMonitor);
+        LoadIconsAsync();
     }
 
     /// <summary>
@@ -94,6 +96,34 @@ public partial class SwitcherWindow : Window
         // Size changes with the filtered count, so re-center after layout settles.
         Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded,
             () => PositionOnMonitor(_targetMonitor));
+        LoadIconsAsync();
+    }
+
+    /// <summary>
+    /// Load any missing window icons off the UI/hook hot path and apply them as
+    /// they arrive. Keeping icon work out of the keyboard-hook callback makes the
+    /// first Alt+Tab instant and avoids tripping the low-level-hook timeout.
+    /// Frozen bitmaps created on the worker thread are safe to assign on the UI
+    /// thread. A generation token discards results from a superseded list.
+    /// </summary>
+    private void LoadIconsAsync()
+    {
+        int generation = ++_iconGeneration;
+        foreach (var item in _items.ToList())
+        {
+            if (item.Icon is not null) continue;
+            IntPtr handle = item.Window.Handle;
+            uint pid = item.Window.ProcessId;
+            _ = System.Threading.Tasks.Task.Run(() =>
+            {
+                var icon = IconHelper.GetWindowIcon(handle, pid);
+                if (icon is null) return;
+                Dispatcher.BeginInvoke(() =>
+                {
+                    if (_iconGeneration == generation) item.SetIcon(icon);
+                });
+            });
+        }
     }
 
     private void PopulateItems(IReadOnlyList<WindowInfo> windows, int selectedIndex, string query)

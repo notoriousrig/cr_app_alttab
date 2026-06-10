@@ -131,8 +131,9 @@ src/AltTabCustom/
   App.xaml(.cs)              # tray app bootstrap, single-instance, settings wiring
   app.manifest              # asInvoker (no admin) + Per-Monitor v2 DPI
   Core/
-    SwitcherController.cs   # the Alt+Tab state machine (nav, search, close)
-    MruTracker.cs           # focus-history hook for most-recently-used ordering
+    SwitcherController.cs   # the Alt+Tab state machine (nav, search, close, tap/hold)
+    MruTracker.cs           # focus-history WinEvent hook
+    MruOrder.cs             # pure most-recently-used ordering (unit tested)
     DisplayMetrics.cs       # effective monitor width (for profile switching)
     Logger.cs               # best-effort logging to %AppData%
     StartupManager.cs       # per-user "start with Windows"
@@ -153,6 +154,7 @@ src/AltTabCustom/
     ProfileEditorControl.xaml(.cs)  # editor for one display profile
     FieldParse.cs               # tolerant settings-field parsing
     SettingsWindow.xaml(.cs)    # the tabbed settings dialog
+tests/AltTabCustom.Tests/      # xUnit tests for the pure logic (run in CI)
 ```
 
 ## Troubleshooting
@@ -173,10 +175,9 @@ first place to look if Alt+Tab stops responding or a window won't activate.
   of the DWM-compositing complexity that live previews require.
 - **Elevated foreground windows** fall back to the system switcher (see
   "Why no admin is needed" above) — an intentional Windows security boundary.
-- The first Alt+Tab of a session does the window enumeration + icon load inside
-  the hook callback. On a machine with a very large number of windows this can
-  approach Windows' low‑level‑hook timeout; if you ever see a missed first
-  press, that's the cause. Subsequent navigation is instant.
+- Window icons load **asynchronously** (off the keyboard-hook hot path), so on a
+  machine with many windows the list appears instantly and icons fade in a
+  moment later rather than blocking the first Alt+Tab.
 
 ## License
 

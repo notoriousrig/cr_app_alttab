@@ -34,6 +34,7 @@ internal static class WindowEnumerator
                 Handle = hWnd,
                 Title = title,
                 ProcessName = procName,
+                ProcessId = pid,
                 IsMinimized = minimized,
             };
 
