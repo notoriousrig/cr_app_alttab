@@ -96,3 +96,10 @@ jobs:
               opacity.
             - App icon, optional acrylic background (experimental), logging, and
               optional start-with-Windows (per-user).
+
+            ### Reliability (new in 1.2)
+            - Window icons load **asynchronously**, off the keyboard-hook hot path,
+              so the first Alt+Tab is instant.
+            - A **watchdog** re-installs the keyboard hook if Windows ever drops it.
+            - Unit tests (MRU ordering, profile resolution, settings migration) now
+              run in CI.
