@@ -161,6 +161,15 @@ internal static class NativeMethods
     [DllImport("user32.dll")]
     public static extern uint GetDpiForWindow(IntPtr hwnd);
 
+    [DllImport("user32.dll")]
+    public static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint dwFlags);
+
+    public const uint MONITOR_DEFAULTTONEAREST = 0x00000002;
+
+    // MDT_EFFECTIVE_DPI = 0
+    [DllImport("Shcore.dll")]
+    public static extern int GetDpiForMonitor(IntPtr hmonitor, int dpiType, out uint dpiX, out uint dpiY);
+
     public const int GWL_STYLE = -16;
     public const int GWL_EXSTYLE = -20;
 

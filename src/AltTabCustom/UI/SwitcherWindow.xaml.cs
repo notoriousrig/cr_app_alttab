@@ -75,10 +75,14 @@ public partial class SwitcherWindow : Window
 
         ApplyAcrylic();
 
-        // The items panel is realized during the layout pass triggered by Show();
-        // apply the column count once it exists.
-        Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded,
-            () => ApplyColumns(_profile.Columns));
+        // Settle layout before positioning. Show() realizes the items panel, but a
+        // layout pass hasn't completed, so ActualWidth/Height would be stale —
+        // which after a monitor/profile change put the first overlay in the wrong
+        // place until the next draw. Force the panel to realize, apply the column
+        // count, then re-measure so we center against the final size.
+        UpdateLayout();
+        ApplyColumns(_profile.Columns);
+        UpdateLayout();
 
         SetSelection(selectedIndex);
         PositionOnMonitor(_targetMonitor);
@@ -246,22 +250,43 @@ public partial class SwitcherWindow : Window
         IntPtr hwnd = new WindowInteropHelper(this).Handle;
         if (hwnd == IntPtr.Zero) return;
 
-        uint dpi = GetDpiForWindow(hwnd);
-        double scale = dpi == 0 ? 1.0 : dpi / 96.0;
-
-        double pxW = ActualWidth * scale;
-        double pxH = ActualHeight * scale;
-
         var screen = targetWindow != IntPtr.Zero
             ? System.Windows.Forms.Screen.FromHandle(targetWindow)
             : System.Windows.Forms.Screen.PrimaryScreen!;
         var area = screen.WorkingArea; // pixels
+
+        // Convert the overlay's DIP size to pixels using the DPI of the monitor we
+        // are about to move it to — not the overlay's current monitor. With
+        // per-monitor DPI the two can differ, and the window rescales to the
+        // target once placed there.
+        double scale = ScaleForTargetMonitor(targetWindow, hwnd);
+        double pxW = ActualWidth * scale;
+        double pxH = ActualHeight * scale;
 
         int x = area.X + (int)((area.Width - pxW) / 2);
         int y = area.Y + (int)((area.Height - pxH) / 2);
 
         SetWindowPos(hwnd, HWND_TOPMOST, x, y, 0, 0,
             SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+    }
+
+    private static double ScaleForTargetMonitor(IntPtr targetWindow, IntPtr fallbackHwnd)
+    {
+        try
+        {
+            IntPtr mon = targetWindow != IntPtr.Zero
+                ? MonitorFromWindow(targetWindow, MONITOR_DEFAULTTONEAREST)
+                : IntPtr.Zero;
+            if (mon != IntPtr.Zero && GetDpiForMonitor(mon, 0, out uint dpiX, out _) == 0 && dpiX != 0)
+                return dpiX / 96.0;
+        }
+        catch
+        {
+            // Shcore unavailable / failed — fall back to the window's own DPI.
+        }
+
+        uint dpi = GetDpiForWindow(fallbackHwnd);
+        return dpi == 0 ? 1.0 : dpi / 96.0;
     }
 
     private void ApplyTheme(DisplayProfile s)
