@@ -35,6 +35,11 @@ internal sealed class KeyboardHook : IDisposable
         _proc = HookCallback;
     }
 
+    // A callback slower than this risks the OS removing the hook (the default
+    // LowLevelHooksTimeout is ~300ms), so the watchdog re-installs after one.
+    private const long SlowCallbackMs = 180;
+    private volatile bool _recentSlowCallback;
+
     public void Install()
     {
         if (_hookId != IntPtr.Zero) return;
@@ -45,11 +50,33 @@ internal sealed class KeyboardHook : IDisposable
                 $"Failed to install keyboard hook (Win32 error {Marshal.GetLastWin32Error()}).");
     }
 
+    /// <summary>Unhook and re-install. Used by the watchdog to recover from a
+    /// hook that Windows may have silently dropped.</summary>
+    public void Reinstall()
+    {
+        if (_hookId != IntPtr.Zero)
+        {
+            UnhookWindowsHookEx(_hookId);
+            _hookId = IntPtr.Zero;
+        }
+        Install();
+    }
+
+    /// <summary>Returns (and clears) whether a recent callback ran slow enough to
+    /// risk the hook being removed.</summary>
+    public bool ConsumeSlowFlag()
+    {
+        bool v = _recentSlowCallback;
+        _recentSlowCallback = false;
+        return v;
+    }
+
     /// <summary>Optional sink for exceptions thrown while handling a key.</summary>
     public Action<Exception>? OnError;
 
     private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
     {
+        long start = Environment.TickCount64;
         try
         {
             if (nCode >= 0)
@@ -86,6 +113,9 @@ internal sealed class KeyboardHook : IDisposable
             // down the hook and leave Alt+Tab broken. Report and carry on.
             OnError?.Invoke(ex);
         }
+
+        if (Environment.TickCount64 - start >= SlowCallbackMs)
+            _recentSlowCallback = true;
 
         return CallNextHookEx(_hookId, nCode, wParam, lParam);
     }

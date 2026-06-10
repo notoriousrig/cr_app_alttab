@@ -30,6 +30,8 @@ internal sealed class SwitcherController : IDisposable
     private readonly SwitcherWindow _switcher = new();
     private readonly MruTracker _mru = new();
     private readonly DispatcherTimer _showTimer;
+    private readonly DispatcherTimer _watchdog;
+    private long _lastReinstall;
     private AppSettings _settings;
 
     private State _state = State.Closed;
@@ -52,13 +54,43 @@ internal sealed class SwitcherController : IDisposable
             _showTimer.Stop();
             if (_state == State.Pending) PromoteToOpen(_pendingIndex);
         };
+
+        _watchdog = new DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
+        _watchdog.Tick += (_, _) => WatchdogTick();
     }
 
     public void Start()
     {
         _mru.Start();
         _hook.Install();
+        _lastReinstall = Environment.TickCount64;
+        _watchdog.Start();
         Logger.Info("Keyboard hook and MRU tracker started.");
+    }
+
+    // Periodically recover the keyboard hook in case Windows silently dropped it
+    // (which it can do after a slow callback). Only acts while idle so it never
+    // interrupts an in-progress switch.
+    private const long PeriodicReinstallMs = 30_000;
+
+    private void WatchdogTick()
+    {
+        if (_state != State.Closed) return;
+
+        bool slow = _hook.ConsumeSlowFlag();
+        bool due = Environment.TickCount64 - _lastReinstall >= PeriodicReinstallMs;
+        if (!slow && !due) return;
+
+        try
+        {
+            _hook.Reinstall();
+            _lastReinstall = Environment.TickCount64;
+            if (slow) Logger.Info("Re-installed keyboard hook after a slow callback.");
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Failed to re-install keyboard hook in watchdog", ex);
+        }
     }
 
     public void UpdateSettings(AppSettings settings) => _settings = settings;
@@ -343,6 +375,7 @@ internal sealed class SwitcherController : IDisposable
     public void Dispose()
     {
         _showTimer.Stop();
+        _watchdog.Stop();
         _hook.Dispose();
         _mru.Dispose();
         if (Application.Current is not null)

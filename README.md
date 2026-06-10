@@ -168,6 +168,10 @@ AltTabCustom writes a log to:
 Startup, the keyboard hook, and any errors are recorded there — that's the
 first place to look if Alt+Tab stops responding or a window won't activate.
 
+A background **watchdog** re-installs the keyboard hook if Windows ever drops it
+(which it can do after a slow callback), so Alt+Tab shouldn't silently go dead.
+The re-install only happens while idle, never during a switch.
+
 ## Known limitations
 
 - **Icon-based items by design.** Each entry shows the window's icon, title, and
