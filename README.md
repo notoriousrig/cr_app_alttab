@@ -20,7 +20,8 @@ elevation anywhere.
   - <kbd>Alt</kbd>+<kbd>Tab</kbd> — open / next
   - <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>Tab</kbd> — open / previous
   - <kbd>↑</kbd> / <kbd>↓</kbd> (or <kbd>Tab</kbd>) — move selection; <kbd>Home</kbd> / <kbd>End</kbd> — jump to first / last
-  - <kbd>→</kbd> — **filter to just the selected app** (windows sharing its process); <kbd>←</kbd> — back to the full list
+  - <kbd>→</kbd> — **filter to just the selected app** (windows sharing its process)
+  - <kbd>←</kbd> — exit the app filter if active; otherwise **close** the selected window
   - <kbd>1</kbd>–<kbd>9</kbd> — jump straight to that row (when no search is active)
   - **Type to filter** — start typing to narrow the list by window title or
     process name (the match is highlighted); <kbd>Backspace</kbd> clears a character

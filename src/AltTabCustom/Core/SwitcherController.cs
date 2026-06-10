@@ -142,12 +142,13 @@ internal sealed class SwitcherController : IDisposable
                 return true;
 
             case VK_LEFT:
-                // Pop back out of an app filter; otherwise behave like Up.
+                // While drilled into an app, pop back out first; otherwise close
+                // the selected window.
                 if (e.IsKeyDown)
                 {
                     EnsureOpen();
                     if (_processFilter is not null) ClearProcessFilter();
-                    else Navigate(-1);
+                    else CloseSelected();
                 }
                 return true;
 
