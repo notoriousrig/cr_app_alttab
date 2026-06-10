@@ -95,13 +95,19 @@ jobs:
             - **Dock / undock display profiles** — separate visual settings for a
               large monitor vs a laptop screen, switched automatically by screen size.
             - **Custom icon rules** — force a chosen icon for windows whose title or
-              process name matches (contains / equals / regex); edited in
-              **Settings → Icon rules**.
+              process name matches (contains / equals / regex), optionally with a
+              second condition ANDed in; edited in **Settings → Icon rules**.
             - **Deeply customizable** (per profile, with a live preview): item count,
               columns, item/icon sizes, font family + weight, colors, corner radius,
               opacity.
             - App icon, optional acrylic background (experimental), logging, and
               optional start-with-Windows (per-user).
+
+            ### New in 1.6
+            - **Icon rules can require a second condition (AND)** — e.g. *title
+              contains “calendar” **and** process contains “outlook”*. Each side
+              independently picks the field, match type, and pattern. Existing
+              rules are unaffected.
 
             ### Fixes in 1.5.1
             - The first Alt+Tab after a monitor/resolution change (e.g. docking or
