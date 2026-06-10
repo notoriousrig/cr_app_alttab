@@ -89,9 +89,20 @@ public partial class SwitcherWindow : Window
     /// Replace the items while the switcher is already open (used by live
     /// search filtering and by closing windows from the list).
     /// </summary>
-    public void UpdateItems(IReadOnlyList<WindowInfo> windows, int selectedIndex, string searchText)
+    public void UpdateItems(IReadOnlyList<WindowInfo> windows, int selectedIndex, string searchText,
+        string? statusLabel = null)
     {
-        SetSearchText(searchText);
+        if (statusLabel is not null)
+        {
+            // A process/app filter is active — show its label instead of the
+            // typed-search glyph, but still highlight any typed text in titles.
+            SearchText.Text = statusLabel;
+            SearchBar.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            SetSearchText(searchText);
+        }
         PopulateItems(windows, selectedIndex, query: searchText);
         Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded,
             () => ApplyColumns(_profile.Columns));

@@ -40,6 +40,10 @@ internal sealed class SwitcherController : IDisposable
     private int _pendingIndex;
     private readonly StringBuilder _filter = new();
 
+    // When set, the list is restricted to windows of this process name (Right
+    // arrow sets it from the selected window; Left arrow clears it).
+    private string? _processFilter;
+
     public SwitcherController(AppSettings settings)
     {
         _settings = settings;
@@ -124,14 +128,27 @@ internal sealed class SwitcherController : IDisposable
                 if (e.IsKeyDown) { EnsureOpen(); Navigate(e.ShiftDown ? -1 : +1); }
                 return true;
 
-            case VK_LEFT:
             case VK_UP:
                 if (e.IsKeyDown) { EnsureOpen(); Navigate(-1); }
                 return true;
 
-            case VK_RIGHT:
             case VK_DOWN:
                 if (e.IsKeyDown) { EnsureOpen(); Navigate(+1); }
+                return true;
+
+            case VK_RIGHT:
+                // Drill into just the selected window's application.
+                if (e.IsKeyDown) { EnsureOpen(); FilterToSelectedProcess(); }
+                return true;
+
+            case VK_LEFT:
+                // Pop back out of an app filter; otherwise behave like Up.
+                if (e.IsKeyDown)
+                {
+                    EnsureOpen();
+                    if (_processFilter is not null) ClearProcessFilter();
+                    else Navigate(-1);
+                }
                 return true;
 
             case VK_HOME:
@@ -198,6 +215,7 @@ internal sealed class SwitcherController : IDisposable
         {
             _foregroundAtOpen = GetForegroundWindow();
             _filter.Clear();
+            _processFilter = null;
 
             // Skip icon loading here — it's the slow part and would run inside the
             // keyboard-hook callback. The overlay loads icons asynchronously.
@@ -277,18 +295,50 @@ internal sealed class SwitcherController : IDisposable
         ApplyFilter();
     }
 
-    private void ApplyFilter()
+    // Restrict the list to the selected window's application.
+    private void FilterToSelectedProcess()
     {
-        string f = _filter.ToString();
-        List<WindowInfo> filtered = string.IsNullOrEmpty(f)
-            ? _allWindows
-            : _allWindows.Where(w => Match(w.Title, f) || Match(w.ProcessName, f)).ToList();
-
-        _switcher.UpdateItems(filtered, selectedIndex: 0, searchText: f);
+        var sel = _switcher.SelectedWindow;
+        if (sel is null || string.IsNullOrEmpty(sel.ProcessName)) return;
+        _processFilter = sel.ProcessName;
+        ApplyFilter(keepSelection: sel.Handle);
     }
 
-    private static bool Match(string haystack, string needle)
-        => haystack.Contains(needle, StringComparison.OrdinalIgnoreCase);
+    // Back to the full list.
+    private void ClearProcessFilter()
+    {
+        if (_processFilter is null) return;
+        IntPtr? keep = _switcher.SelectedWindow?.Handle;
+        _processFilter = null;
+        ApplyFilter(keepSelection: keep);
+    }
+
+    private void ApplyFilter(IntPtr? keepSelection = null)
+    {
+        string f = _filter.ToString();
+        List<WindowInfo> filtered = Filtered(f);
+
+        int selectedIndex = 0;
+        if (keepSelection is IntPtr h)
+        {
+            int idx = filtered.FindIndex(w => w.Handle == h);
+            if (idx >= 0) selectedIndex = idx;
+        }
+
+        _switcher.UpdateItems(filtered, selectedIndex, searchText: f, statusLabel: StatusLabel(f));
+    }
+
+    private List<WindowInfo> Filtered(string f) => WindowFilter.Apply(_allWindows, _processFilter, f);
+
+    // The text shown in the overlay's filter bar; null falls back to the default
+    // typed-search display.
+    private string? StatusLabel(string f)
+    {
+        if (_processFilter is null) return null;
+        string label = "⊞  " + _processFilter;
+        if (f.Length > 0) label += "    🔍  " + f;
+        return label;
+    }
 
     private void Commit()
     {
@@ -312,6 +362,7 @@ internal sealed class SwitcherController : IDisposable
         bool wasOpen = _state == State.Open;
         _state = State.Closed;
         _filter.Clear();
+        _processFilter = null;
         if (wasOpen) _switcher.HideSwitcher();
     }
 
@@ -347,9 +398,19 @@ internal sealed class SwitcherController : IDisposable
 
         _allWindows.RemoveAll(w => w.Handle == window.Handle);
         if (_allWindows.Count == 0)
+        {
             Close();
-        else
-            ApplyFilter();
+            return;
+        }
+
+        // If the app we were drilled into has no windows left, pop the filter.
+        if (_processFilter is not null &&
+            !_allWindows.Any(w => string.Equals(w.ProcessName, _processFilter, StringComparison.OrdinalIgnoreCase)))
+        {
+            _processFilter = null;
+        }
+
+        ApplyFilter();
     }
 
     private static void ActivateSafe(IntPtr handle)
