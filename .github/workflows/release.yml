@@ -103,6 +103,11 @@ jobs:
             - App icon, optional acrylic background (experimental), logging, and
               optional start-with-Windows (per-user).
 
+            ### Fixes in 1.6.1
+            - **Icon rules** now scroll: the tab scrolls and the rules list has its
+              own scrollbar, so you can reach every rule (and the full editor) no
+              matter how many you add.
+
             ### New in 1.6
             - **Icon rules can require a second condition (AND)** — e.g. *title
               contains “calendar” **and** process contains “outlook”*. Each side
