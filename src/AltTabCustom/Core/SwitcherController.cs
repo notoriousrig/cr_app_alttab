@@ -93,7 +93,12 @@ internal sealed class SwitcherController : IDisposable
         }
     }
 
-    public void UpdateSettings(AppSettings settings) => _settings = settings;
+    public void UpdateSettings(AppSettings settings)
+    {
+        _settings = settings;
+        // Forget cached custom icons so edited rules / replaced files take effect.
+        Interop.CustomIconResolver.Clear();
+    }
 
     // ---- Hook handling (returns true to swallow the key) ----
     private bool OnKey(KeyEventArgs e)
@@ -243,7 +248,7 @@ internal sealed class SwitcherController : IDisposable
         double effectiveWidth = DisplayMetrics.EffectiveWidth(_foregroundAtOpen);
         var profile = _settings.ResolveProfile(effectiveWidth);
         _switcher.ShowSwitcher(_allWindows, selectedIndex, profile, _settings.ClickToActivate,
-            _foregroundAtOpen, _settings.AcrylicBackground);
+            _foregroundAtOpen, _settings.AcrylicBackground, _settings.IconRules);
     }
 
     private void Navigate(int delta) => _switcher.MoveSelection(delta);

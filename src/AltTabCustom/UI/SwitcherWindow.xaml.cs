@@ -18,6 +18,7 @@ public partial class SwitcherWindow : Window
     private DisplayProfile _profile = new();
     private bool _clickToActivate = true;
     private bool _acrylic;
+    private IReadOnlyList<IconRule> _iconRules = Array.Empty<IconRule>();
 
     private IntPtr _targetMonitor;
 
@@ -55,11 +56,13 @@ public partial class SwitcherWindow : Window
     /// Populate, style, position and display the switcher.
     /// </summary>
     public void ShowSwitcher(IReadOnlyList<WindowInfo> windows, int selectedIndex,
-        DisplayProfile profile, bool clickToActivate, IntPtr targetMonitorWindow, bool acrylic = false)
+        DisplayProfile profile, bool clickToActivate, IntPtr targetMonitorWindow, bool acrylic = false,
+        IReadOnlyList<IconRule>? iconRules = null)
     {
         _profile = profile;
         _clickToActivate = clickToActivate;
         _acrylic = acrylic;
+        _iconRules = iconRules ?? Array.Empty<IconRule>();
         _targetMonitor = targetMonitorWindow;
         ApplyTheme(profile);
         SetSearchText(string.Empty);
@@ -109,14 +112,19 @@ public partial class SwitcherWindow : Window
     private void LoadIconsAsync()
     {
         int generation = ++_iconGeneration;
+        var rules = _iconRules;
         foreach (var item in _items.ToList())
         {
             if (item.Icon is not null) continue;
             IntPtr handle = item.Window.Handle;
             uint pid = item.Window.ProcessId;
+            string title = item.Window.Title;
+            string processName = item.Window.ProcessName;
             _ = System.Threading.Tasks.Task.Run(() =>
             {
-                var icon = IconHelper.GetWindowIcon(handle, pid);
+                // A matching user rule overrides the OS icon; otherwise fall back.
+                var icon = CustomIconResolver.Resolve(rules, title, processName)
+                    ?? IconHelper.GetWindowIcon(handle, pid);
                 if (icon is null) return;
                 Dispatcher.BeginInvoke(() =>
                 {

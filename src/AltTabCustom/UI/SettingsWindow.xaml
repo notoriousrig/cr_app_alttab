@@ -61,6 +61,76 @@
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
+            <TabItem Header="Icon rules">
+                <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" TextWrapping="Wrap" Foreground="#666" Margin="0,0,0,8"
+                               Text="Force a custom icon for windows whose title or process name matches. Rules are checked top to bottom; the first match wins. Point each rule at a .ico or .png file." />
+
+                    <ListBox Grid.Row="1" x:Name="RulesList"
+                             SelectionChanged="RulesList_SelectionChanged"
+                             DisplayMemberPath="Summary" />
+
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,8">
+                        <Button Content="Add rule" Width="90" Click="AddRule_Click" Margin="0,0,8,0" />
+                        <Button x:Name="RemoveRuleButton" Content="Remove" Width="90"
+                                Click="RemoveRule_Click" IsEnabled="False" />
+                    </StackPanel>
+
+                    <Border Grid.Row="3" x:Name="RuleEditor" BorderBrush="#DDD" BorderThickness="1"
+                            Padding="10" IsEnabled="False">
+                        <StackPanel>
+                            <Grid Margin="0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="80" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="When" VerticalAlignment="Center" />
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <ComboBox x:Name="FieldCombo" Width="120" SelectionChanged="RuleDetail_Changed">
+                                        <ComboBoxItem Content="Title" />
+                                        <ComboBoxItem Content="Process name" />
+                                    </ComboBox>
+                                    <ComboBox x:Name="MatchCombo" Width="130" Margin="8,0,0,0" SelectionChanged="RuleDetail_Changed">
+                                        <ComboBoxItem Content="contains" />
+                                        <ComboBoxItem Content="equals" />
+                                        <ComboBoxItem Content="matches (regex)" />
+                                    </ComboBox>
+                                </StackPanel>
+                            </Grid>
+                            <Grid Margin="0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="80" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Pattern" VerticalAlignment="Center" />
+                                <TextBox Grid.Column="1" x:Name="PatternBox" VerticalAlignment="Center"
+                                         TextChanged="RuleDetail_Changed" />
+                            </Grid>
+                            <Grid Margin="0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="80" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Icon file" VerticalAlignment="Center" />
+                                <TextBox Grid.Column="1" x:Name="IconPathBox" VerticalAlignment="Center"
+                                         TextChanged="RuleDetail_Changed" />
+                                <Button Grid.Column="2" Content="Browse…" Width="80" Margin="8,0,0,0"
+                                        Click="BrowseIcon_Click" />
+                            </Grid>
+                            <CheckBox x:Name="RuleEnabledBox" Content="Enabled" Margin="0,6,0,0"
+                                      Click="RuleDetail_Changed" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </TabItem>
         </TabControl>
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">

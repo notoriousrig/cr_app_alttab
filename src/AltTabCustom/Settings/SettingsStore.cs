@@ -14,6 +14,9 @@ public static class SettingsStore
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         WriteIndented = true,
+        // Persist rule enums as readable strings ("Title", "Contains", …) so the
+        // settings file stays hand-editable.
+        Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() },
     };
 
     public static string Directory =>
@@ -70,6 +73,7 @@ public static class SettingsStore
     {
         s.Docked ??= DisplayProfile.LargeDefault();
         s.Laptop ??= DisplayProfile.SmallDefault();
+        s.IconRules ??= new();
         return s;
     }
 

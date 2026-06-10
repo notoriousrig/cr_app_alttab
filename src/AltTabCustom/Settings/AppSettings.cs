@@ -21,6 +21,12 @@ public sealed class AppSettings
     public bool ClickToActivate { get; set; } = true;
 
     /// <summary>
+    /// User-defined icon overrides. The first rule whose title/process matches a
+    /// window forces its icon, falling back to the OS icon when none match.
+    /// </summary>
+    public List<IconRule> IconRules { get; set; } = new();
+
+    /// <summary>
     /// Milliseconds Alt must be held after Alt+Tab before the overlay appears.
     /// A quick tap within this window switches straight to the previous (MRU)
     /// window without ever showing the UI, like the native switcher. Set to 0
