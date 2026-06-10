@@ -84,8 +84,10 @@ jobs:
             - **No admin required** — intercepts Alt+Tab via a low-level keyboard hook.
             - **Tap vs hold** — a quick Alt+Tab tap jumps to your last window with no
               UI; hold to open the switcher (configurable delay).
-            - **Navigation** — arrows / Tab, <kbd>Home</kbd>/<kbd>End</kbd>, and
-              <kbd>1</kbd>–<kbd>9</kbd> to jump to a row.
+            - **Navigation** — <kbd>↑</kbd>/<kbd>↓</kbd> / <kbd>Tab</kbd>,
+              <kbd>Home</kbd>/<kbd>End</kbd>, and <kbd>1</kbd>–<kbd>9</kbd> to jump to a row.
+            - **Filter by app** — <kbd>→</kbd> narrows the list to just the selected
+              window's application; <kbd>←</kbd> returns to the full list.
             - **Type-to-filter search** with the matched text highlighted.
             - **Close from the switcher** — <kbd>Delete</kbd> or middle-click.
             - **True most-recently-used ordering.**
@@ -99,6 +101,11 @@ jobs:
               opacity.
             - App icon, optional acrylic background (experimental), logging, and
               optional start-with-Windows (per-user).
+
+            ### New in 1.4
+            - **Filter by app** — press <kbd>→</kbd> to narrow the switcher to just
+              the selected window's application (windows sharing its process);
+              <kbd>←</kbd> goes back to the full list. Combines with type-to-filter.
 
             ### New in 1.3
             - **Custom icon rules** — override the icon for matching windows
