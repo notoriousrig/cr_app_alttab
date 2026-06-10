@@ -16,7 +16,7 @@
     <!-- No admin manifest: we run as a normal (asInvoker) user. -->
     <!-- High-DPI is configured in app.manifest; silence the WinForms WFAC010 hint. -->
     <NoWarn>$(NoWarn);WFAC010</NoWarn>
-    <Version>1.4.0</Version>
+    <Version>1.5.0</Version>
     <Product>AltTabCustom</Product>
     <Description>A customizable, no-admin Alt+Tab window switcher for Windows 11.</Description>
   </PropertyGroup>

@@ -87,7 +87,8 @@ jobs:
             - **Navigation** — <kbd>↑</kbd>/<kbd>↓</kbd> / <kbd>Tab</kbd>,
               <kbd>Home</kbd>/<kbd>End</kbd>, and <kbd>1</kbd>–<kbd>9</kbd> to jump to a row.
             - **Filter by app** — <kbd>→</kbd> narrows the list to just the selected
-              window's application; <kbd>←</kbd> returns to the full list.
+              window's application; <kbd>←</kbd> exits the app filter, or (when not
+              filtered) closes the selected window.
             - **Type-to-filter search** with the matched text highlighted.
             - **Close from the switcher** — <kbd>Delete</kbd> or middle-click.
             - **True most-recently-used ordering.**
@@ -101,6 +102,14 @@ jobs:
               opacity.
             - App icon, optional acrylic background (experimental), logging, and
               optional start-with-Windows (per-user).
+
+            ### New in 1.5
+            - **Refreshed Settings** — cleaner, card-based layout with a modern light
+              theme (the switcher overlay is unchanged).
+            - **Single-click the tray icon** to open Settings (right-click still
+              shows the menu).
+            - <kbd>←</kbd> now closes the selected window when you're not filtered to
+              an app (and still exits the app filter when you are).
 
             ### New in 1.4
             - **Filter by app** — press <kbd>→</kbd> to narrow the switcher to just
