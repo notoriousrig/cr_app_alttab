@@ -86,7 +86,12 @@ public partial class App : Application
             Text = "AltTabCustom — customizable Alt+Tab",
             ContextMenuStrip = menu,
         };
-        _tray.DoubleClick += (_, _) => OpenSettings();
+        // Left-click opens Settings; right-click shows the menu (handled by the
+        // ContextMenuStrip automatically).
+        _tray.MouseClick += (_, e) =>
+        {
+            if (e.Button == Forms.MouseButtons.Left) OpenSettings();
+        };
     }
 
     /// <summary>Load the bundled app.ico for the tray, falling back to a stock icon.</summary>

@@ -2,6 +2,14 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              FontFamily="Segoe UI" FontSize="13">
+  <UserControl.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="pack://application:,,,/UI/SettingsTheme.xaml" />
+      </ResourceDictionary.MergedDictionaries>
+    </ResourceDictionary>
+  </UserControl.Resources>
+
   <Grid>
     <Grid.RowDefinitions>
         <RowDefinition Height="Auto" />
@@ -9,96 +17,113 @@
     </Grid.RowDefinitions>
 
     <!-- Live preview of this profile. -->
-    <StackPanel Grid.Row="0" Margin="2,2,2,8">
-        <TextBlock Text="Preview" FontWeight="Bold" Margin="0,0,0,4" />
-        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled"
-                      MaxHeight="180" Background="#202020">
-            <Border x:Name="PreviewHost" Padding="14" HorizontalAlignment="Left" Margin="8" />
-        </ScrollViewer>
-    </StackPanel>
+    <Border Grid.Row="0" Style="{StaticResource Card}">
+        <StackPanel>
+            <TextBlock Text="Preview" Style="{StaticResource SectionHeader}" />
+            <Border CornerRadius="8" Background="#202020" Padding="2" ClipToBounds="True">
+                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled"
+                              MaxHeight="180" Background="Transparent">
+                    <Border x:Name="PreviewHost" Padding="14" HorizontalAlignment="Left" Margin="8" />
+                </ScrollViewer>
+            </Border>
+        </StackPanel>
+    </Border>
 
-    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="2">
-            <TextBlock Text="Layout" FontWeight="Bold" Margin="0,0,0,6" />
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="200" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition />
-                </Grid.RowDefinitions>
+    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,0,8,0">
+        <StackPanel>
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="Layout" Style="{StaticResource SectionHeader}" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="220" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition />
+                        </Grid.RowDefinitions>
 
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="Max items on screen" VerticalAlignment="Center" Margin="0,4" />
-                <TextBox  Grid.Row="0" Grid.Column="1" x:Name="MaxItemsBox" Margin="0,4" />
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Max items on screen" Style="{StaticResource FieldLabel}" />
+                        <TextBox  Grid.Row="0" Grid.Column="1" x:Name="MaxItemsBox" />
 
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="Columns" VerticalAlignment="Center" Margin="0,4" />
-                <TextBox  Grid.Row="1" Grid.Column="1" x:Name="ColumnsBox" Margin="0,4" />
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Columns" Style="{StaticResource FieldLabel}" />
+                        <TextBox  Grid.Row="1" Grid.Column="1" x:Name="ColumnsBox" />
 
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="Item width (px)" VerticalAlignment="Center" Margin="0,4" />
-                <TextBox  Grid.Row="2" Grid.Column="1" x:Name="ItemWidthBox" Margin="0,4" />
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Item width (px)" Style="{StaticResource FieldLabel}" />
+                        <TextBox  Grid.Row="2" Grid.Column="1" x:Name="ItemWidthBox" />
 
-                <TextBlock Grid.Row="3" Grid.Column="0" Text="Item height (px)" VerticalAlignment="Center" Margin="0,4" />
-                <TextBox  Grid.Row="3" Grid.Column="1" x:Name="ItemHeightBox" Margin="0,4" />
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Item height (px)" Style="{StaticResource FieldLabel}" />
+                        <TextBox  Grid.Row="3" Grid.Column="1" x:Name="ItemHeightBox" />
 
-                <TextBlock Grid.Row="4" Grid.Column="0" Text="Icon size (px)" VerticalAlignment="Center" Margin="0,4" />
-                <TextBox  Grid.Row="4" Grid.Column="1" x:Name="IconSizeBox" Margin="0,4" />
-            </Grid>
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Icon size (px)" Style="{StaticResource FieldLabel}" />
+                        <TextBox  Grid.Row="4" Grid.Column="1" x:Name="IconSizeBox" />
+                    </Grid>
+                </StackPanel>
+            </Border>
 
-            <TextBlock Text="Typography" FontWeight="Bold" Margin="0,16,0,6" />
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="200" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition />
-                </Grid.RowDefinitions>
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="Typography" Style="{StaticResource SectionHeader}" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="220" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition />
+                        </Grid.RowDefinitions>
 
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="Font family" VerticalAlignment="Center" Margin="0,4" />
-                <ComboBox  Grid.Row="0" Grid.Column="1" x:Name="FontFamilyBox" Margin="0,4" IsEditable="True" />
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Font family" Style="{StaticResource FieldLabel}" />
+                        <ComboBox  Grid.Row="0" Grid.Column="1" x:Name="FontFamilyBox" IsEditable="True" />
 
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="Title font size" VerticalAlignment="Center" Margin="0,4" />
-                <TextBox  Grid.Row="1" Grid.Column="1" x:Name="FontSizeBox" Margin="0,4" />
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Title font size" Style="{StaticResource FieldLabel}" />
+                        <TextBox  Grid.Row="1" Grid.Column="1" x:Name="FontSizeBox" />
 
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="Font weight" VerticalAlignment="Center" Margin="0,4" />
-                <ComboBox  Grid.Row="2" Grid.Column="1" x:Name="FontWeightBox" Margin="0,4" />
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Font weight" Style="{StaticResource FieldLabel}" />
+                        <ComboBox  Grid.Row="2" Grid.Column="1" x:Name="FontWeightBox" />
 
-                <TextBlock Grid.Row="3" Grid.Column="0" Text="Process font size" VerticalAlignment="Center" Margin="0,4" />
-                <TextBox  Grid.Row="3" Grid.Column="1" x:Name="ProcessFontSizeBox" Margin="0,4" />
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Process font size" Style="{StaticResource FieldLabel}" />
+                        <TextBox  Grid.Row="3" Grid.Column="1" x:Name="ProcessFontSizeBox" />
 
-                <TextBlock Grid.Row="4" Grid.Column="0" Text="Show process name" VerticalAlignment="Center" Margin="0,4" />
-                <CheckBox Grid.Row="4" Grid.Column="1" x:Name="ShowProcessNameBox" VerticalAlignment="Center" Margin="0,4" />
-            </Grid>
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Show process name" Style="{StaticResource FieldLabel}" />
+                        <CheckBox Grid.Row="4" Grid.Column="1" x:Name="ShowProcessNameBox" VerticalAlignment="Center" />
+                    </Grid>
+                </StackPanel>
+            </Border>
 
-            <TextBlock Text="Colors (hex #AARRGGBB or #RRGGBB)" FontWeight="Bold" Margin="0,16,0,6" />
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="200" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition />
-                </Grid.RowDefinitions>
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="Colors" Style="{StaticResource SectionHeader}" />
+                    <TextBlock Text="Hex #AARRGGBB or #RRGGBB" Style="{StaticResource Hint}" Margin="0,-8,0,10" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="220" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition />
+                        </Grid.RowDefinitions>
 
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="Background" VerticalAlignment="Center" Margin="0,4" />
-                <TextBox  Grid.Row="0" Grid.Column="1" x:Name="BackgroundColorBox" Margin="0,4" />
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Background" Style="{StaticResource FieldLabel}" />
+                        <TextBox  Grid.Row="0" Grid.Column="1" x:Name="BackgroundColorBox" />
 
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="Selection" VerticalAlignment="Center" Margin="0,4" />
-                <TextBox  Grid.Row="1" Grid.Column="1" x:Name="SelectionColorBox" Margin="0,4" />
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Selection" Style="{StaticResource FieldLabel}" />
+                        <TextBox  Grid.Row="1" Grid.Column="1" x:Name="SelectionColorBox" />
 
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="Text" VerticalAlignment="Center" Margin="0,4" />
-                <TextBox  Grid.Row="2" Grid.Column="1" x:Name="TextColorBox" Margin="0,4" />
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Text" Style="{StaticResource FieldLabel}" />
+                        <TextBox  Grid.Row="2" Grid.Column="1" x:Name="TextColorBox" />
 
-                <TextBlock Grid.Row="3" Grid.Column="0" Text="Sub-text" VerticalAlignment="Center" Margin="0,4" />
-                <TextBox  Grid.Row="3" Grid.Column="1" x:Name="SubTextColorBox" Margin="0,4" />
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Sub-text" Style="{StaticResource FieldLabel}" />
+                        <TextBox  Grid.Row="3" Grid.Column="1" x:Name="SubTextColorBox" />
 
-                <TextBlock Grid.Row="4" Grid.Column="0" Text="Corner radius" VerticalAlignment="Center" Margin="0,4" />
-                <TextBox  Grid.Row="4" Grid.Column="1" x:Name="CornerRadiusBox" Margin="0,4" />
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Corner radius" Style="{StaticResource FieldLabel}" />
+                        <TextBox  Grid.Row="4" Grid.Column="1" x:Name="CornerRadiusBox" />
 
-                <TextBlock Grid.Row="5" Grid.Column="0" Text="Window opacity (0.1–1.0)" VerticalAlignment="Center" Margin="0,4" />
-                <TextBox  Grid.Row="5" Grid.Column="1" x:Name="OpacityBox" Margin="0,4" />
-            </Grid>
+                        <TextBlock Grid.Row="5" Grid.Column="0" Text="Window opacity (0.1–1.0)" Style="{StaticResource FieldLabel}" />
+                        <TextBox  Grid.Row="5" Grid.Column="1" x:Name="OpacityBox" />
+                    </Grid>
+                </StackPanel>
+            </Border>
         </StackPanel>
     </ScrollViewer>
   </Grid>

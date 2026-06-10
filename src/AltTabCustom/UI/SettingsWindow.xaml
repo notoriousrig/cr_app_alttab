@@ -4,139 +4,169 @@
         xmlns:local="clr-namespace:AltTabCustom.UI"
         Title="AltTabCustom — Settings"
         Icon="pack://application:,,,/Assets/app.ico"
-        Width="500" Height="680"
+        Width="600" Height="760"
+        MinWidth="520" MinHeight="560"
         WindowStartupLocation="CenterScreen"
         ResizeMode="CanResize"
-        FontFamily="Segoe UI" FontSize="13">
-    <Grid Margin="16">
+        Background="#F4F5F7"
+        FontFamily="Segoe UI" FontSize="13"
+        TextOptions.TextFormattingMode="Ideal">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/UI/SettingsTheme.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid Margin="20">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <TabControl Grid.Row="0">
+        <StackPanel Grid.Row="0" Margin="2,0,0,14">
+            <TextBlock Text="AltTabCustom" FontSize="20" FontWeight="SemiBold" />
+            <TextBlock Text="Customize how your Alt+Tab switcher looks and behaves."
+                       Foreground="{StaticResource MutedBrush}" FontSize="13" Margin="0,2,0,0" />
+        </StackPanel>
+
+        <TabControl Grid.Row="1">
             <TabItem Header="Docked (large screen)">
-                <local:ProfileEditorControl x:Name="DockedEditor" Margin="8" />
+                <local:ProfileEditorControl x:Name="DockedEditor" Margin="2,12,2,2" />
             </TabItem>
             <TabItem Header="Laptop (small screen)">
-                <local:ProfileEditorControl x:Name="LaptopEditor" Margin="8" />
+                <local:ProfileEditorControl x:Name="LaptopEditor" Margin="2,12,2,2" />
             </TabItem>
             <TabItem Header="General">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="10">
-                        <TextBlock Text="Display switching" FontWeight="Bold" Margin="0,0,0,6" />
-                        <CheckBox x:Name="EnableProfilesBox"
-                                  Content="Automatically switch profiles based on screen size"
-                                  Margin="0,4" />
-                        <Grid Margin="0,6">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="260" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" VerticalAlignment="Center"
-                                       Text="Large-screen width threshold (px)" />
-                            <TextBox Grid.Column="1" x:Name="ThresholdBox" VerticalAlignment="Center" />
-                        </Grid>
-                        <TextBlock x:Name="CurrentScreenHint"
-                                   Foreground="#666" TextWrapping="Wrap" Margin="0,2,0,0" />
-                        <TextBlock TextWrapping="Wrap" Foreground="#666" Margin="0,8,0,0"
-                                   Text="At or above the threshold (effective width of the monitor the switcher opens on) the Docked profile is used; below it, the Laptop profile. Turn the checkbox off to always use the Docked profile." />
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,12,0,0"
+                              Padding="0,0,8,0">
+                    <StackPanel>
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Text="Display switching" Style="{StaticResource SectionHeader}" />
+                                <CheckBox x:Name="EnableProfilesBox"
+                                          Content="Automatically switch profiles based on screen size" />
+                                <Grid Margin="0,6,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="120" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Style="{StaticResource FieldLabel}"
+                                               Text="Large-screen width threshold (px)" />
+                                    <TextBox Grid.Column="1" x:Name="ThresholdBox" />
+                                </Grid>
+                                <TextBlock x:Name="CurrentScreenHint" Style="{StaticResource Hint}" />
+                                <TextBlock Style="{StaticResource Hint}"
+                                           Text="At or above the threshold (effective width of the monitor the switcher opens on) the Docked profile is used; below it, the Laptop profile. Turn the checkbox off to always use the Docked profile." />
+                            </StackPanel>
+                        </Border>
 
-                        <TextBlock Text="Behavior" FontWeight="Bold" Margin="0,18,0,6" />
-                        <Grid Margin="0,4">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="260" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" VerticalAlignment="Center"
-                                       Text="Overlay show delay (ms, 0 = instant)" />
-                            <TextBox Grid.Column="1" x:Name="ShowDelayBox" VerticalAlignment="Center" />
-                        </Grid>
-                        <TextBlock TextWrapping="Wrap" Foreground="#666" Margin="0,2,0,6"
-                                   Text="A quick Alt+Tab tap within this delay switches straight to your last window without showing the overlay." />
-                        <CheckBox x:Name="StartWithWindowsBox" Content="Start with Windows (per-user, no admin)" Margin="0,4" />
-                        <CheckBox x:Name="PreventAltMenuBox" Content="Prevent Alt menu pop on release" Margin="0,4" />
-                        <CheckBox x:Name="ClickToActivateBox" Content="Click an item to activate it" Margin="0,4" />
-                        <CheckBox x:Name="AcrylicBox" Content="Acrylic (blurred) background — experimental" Margin="0,4" />
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Text="Behavior" Style="{StaticResource SectionHeader}" />
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="120" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Style="{StaticResource FieldLabel}"
+                                               Text="Overlay show delay (ms, 0 = instant)" />
+                                    <TextBox Grid.Column="1" x:Name="ShowDelayBox" />
+                                </Grid>
+                                <TextBlock Style="{StaticResource Hint}" Margin="0,4,0,8"
+                                           Text="A quick Alt+Tab tap within this delay switches straight to your last window without showing the overlay." />
+                                <CheckBox x:Name="StartWithWindowsBox" Content="Start with Windows (per-user, no admin)" />
+                                <CheckBox x:Name="PreventAltMenuBox" Content="Prevent Alt menu pop on release" />
+                                <CheckBox x:Name="ClickToActivateBox" Content="Click an item to activate it" />
+                                <CheckBox x:Name="AcrylicBox" Content="Acrylic (blurred) background — experimental" />
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
             <TabItem Header="Icon rules">
-                <Grid Margin="10">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
+                <Grid Margin="0,12,0,0">
+                    <Border Style="{StaticResource Card}" Margin="0">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" TextWrapping="Wrap" Foreground="#666" Margin="0,0,0,8"
-                               Text="Force a custom icon for windows whose title or process name matches. Rules are checked top to bottom; the first match wins. Point each rule at a .ico or .png file." />
+                            <TextBlock Grid.Row="0" Text="Icon rules" Style="{StaticResource SectionHeader}" />
+                            <TextBlock Grid.Row="1" Style="{StaticResource Hint}" Margin="0,0,0,10"
+                                       Text="Force a custom icon for windows whose title or process name matches. Rules are checked top to bottom; the first match wins. Point each rule at a .ico or .png file." />
 
-                    <ListBox Grid.Row="1" x:Name="RulesList"
-                             SelectionChanged="RulesList_SelectionChanged"
-                             DisplayMemberPath="Summary" />
+                            <ListBox Grid.Row="2" x:Name="RulesList" MinHeight="120"
+                                     SelectionChanged="RulesList_SelectionChanged"
+                                     DisplayMemberPath="Summary" />
 
-                    <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,8">
-                        <Button Content="Add rule" Width="90" Click="AddRule_Click" Margin="0,0,8,0" />
-                        <Button x:Name="RemoveRuleButton" Content="Remove" Width="90"
-                                Click="RemoveRule_Click" IsEnabled="False" />
-                    </StackPanel>
+                            <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,10">
+                                <Button Content="Add rule" Width="100" Click="AddRule_Click" Margin="0,0,8,0" />
+                                <Button x:Name="RemoveRuleButton" Content="Remove" Width="100"
+                                        Click="RemoveRule_Click" IsEnabled="False" />
+                            </StackPanel>
 
-                    <Border Grid.Row="3" x:Name="RuleEditor" BorderBrush="#DDD" BorderThickness="1"
-                            Padding="10" IsEnabled="False">
-                        <StackPanel>
-                            <Grid Margin="0,4">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="80" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="When" VerticalAlignment="Center" />
-                                <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                    <ComboBox x:Name="FieldCombo" Width="120" SelectionChanged="RuleDetail_Changed">
-                                        <ComboBoxItem Content="Title" />
-                                        <ComboBoxItem Content="Process name" />
-                                    </ComboBox>
-                                    <ComboBox x:Name="MatchCombo" Width="130" Margin="8,0,0,0" SelectionChanged="RuleDetail_Changed">
-                                        <ComboBoxItem Content="contains" />
-                                        <ComboBoxItem Content="equals" />
-                                        <ComboBoxItem Content="matches (regex)" />
-                                    </ComboBox>
+                            <Border Grid.Row="4" x:Name="RuleEditor" IsEnabled="False"
+                                    Background="#FAFBFC" BorderBrush="{StaticResource BorderBrush}"
+                                    BorderThickness="1" CornerRadius="8" Padding="14">
+                                <StackPanel>
+                                    <Grid Margin="0,2">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="80" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="When" Style="{StaticResource FieldLabel}" />
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                            <ComboBox x:Name="FieldCombo" Width="130" SelectionChanged="RuleDetail_Changed">
+                                                <ComboBoxItem Content="Title" />
+                                                <ComboBoxItem Content="Process name" />
+                                            </ComboBox>
+                                            <ComboBox x:Name="MatchCombo" Width="140" Margin="8,0,0,0" SelectionChanged="RuleDetail_Changed">
+                                                <ComboBoxItem Content="contains" />
+                                                <ComboBoxItem Content="equals" />
+                                                <ComboBoxItem Content="matches (regex)" />
+                                            </ComboBox>
+                                        </StackPanel>
+                                    </Grid>
+                                    <Grid Margin="0,2">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="80" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Pattern" Style="{StaticResource FieldLabel}" />
+                                        <TextBox Grid.Column="1" x:Name="PatternBox" TextChanged="RuleDetail_Changed" />
+                                    </Grid>
+                                    <Grid Margin="0,2">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="80" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Icon file" Style="{StaticResource FieldLabel}" />
+                                        <TextBox Grid.Column="1" x:Name="IconPathBox" TextChanged="RuleDetail_Changed" />
+                                        <Button Grid.Column="2" Content="Browse…" Width="90" Margin="8,4,0,4"
+                                                Click="BrowseIcon_Click" />
+                                    </Grid>
+                                    <CheckBox x:Name="RuleEnabledBox" Content="Enabled" Click="RuleDetail_Changed" />
                                 </StackPanel>
-                            </Grid>
-                            <Grid Margin="0,4">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="80" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="Pattern" VerticalAlignment="Center" />
-                                <TextBox Grid.Column="1" x:Name="PatternBox" VerticalAlignment="Center"
-                                         TextChanged="RuleDetail_Changed" />
-                            </Grid>
-                            <Grid Margin="0,4">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="80" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="Icon file" VerticalAlignment="Center" />
-                                <TextBox Grid.Column="1" x:Name="IconPathBox" VerticalAlignment="Center"
-                                         TextChanged="RuleDetail_Changed" />
-                                <Button Grid.Column="2" Content="Browse…" Width="80" Margin="8,0,0,0"
-                                        Click="BrowseIcon_Click" />
-                            </Grid>
-                            <CheckBox x:Name="RuleEnabledBox" Content="Enabled" Margin="0,6,0,0"
-                                      Click="RuleDetail_Changed" />
-                        </StackPanel>
+                            </Border>
+                        </Grid>
                     </Border>
                 </Grid>
             </TabItem>
         </TabControl>
 
-        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
-            <Button x:Name="ResetButton" Content="Reset to defaults" Width="120" Margin="0,0,8,0" Click="Reset_Click" />
-            <Button x:Name="SaveButton" Content="Save" Width="90" Margin="0,0,8,0" Click="Save_Click" IsDefault="True" />
-            <Button x:Name="CancelButton" Content="Close" Width="90" Click="Cancel_Click" IsCancel="True" />
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+            <Button x:Name="ResetButton" Content="Reset to defaults" Width="140" Margin="0,0,8,0" Click="Reset_Click" />
+            <Button x:Name="SaveButton" Content="Save" Width="100" Margin="0,0,8,0"
+                    Style="{StaticResource PrimaryButton}" Click="Save_Click" IsDefault="True" />
+            <Button x:Name="CancelButton" Content="Close" Width="100" Click="Cancel_Click" IsCancel="True" />
         </StackPanel>
     </Grid>
 </Window>
