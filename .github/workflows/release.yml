@@ -70,19 +70,29 @@ jobs:
             ### Download — pick one
             - **`AltTabCustom.exe`** (~70 MB) — *recommended.* Self-contained: just
               run it, **nothing to install, no admin needed**.
-            - **`AltTabCustom-requires-dotnet8.exe`** (~3 MB) — slim build for people
+            - **`AltTabCustom-requires-dotnet8.exe`** (~0.3 MB) — slim build for people
               who already have (or can install) the **.NET 8 Desktop Runtime**.
               Smaller download, but it won't start without that runtime.
 
-            Either runs as a normal user and minimizes to the system tray;
-            right-click the tray icon → **Settings…**.
+            Runs as a normal user and minimizes to the system tray; right-click the
+            tray icon → **Settings…**.
 
             > Windows SmartScreen may warn that the publisher is unknown (the exe is
             > unsigned). Click *More info → Run anyway*.
 
-            ### Highlights
-            - Replaces Alt+Tab via a low-level keyboard hook (no admin)
-            - Type-to-filter search; Delete / middle-click to close a window
-            - True most-recently-used ordering
-            - Customizable item count, columns, fonts, sizes, colors, opacity
-            - Optional start-with-Windows (per-user)
+            ### Features
+            - **No admin required** — intercepts Alt+Tab via a low-level keyboard hook.
+            - **Tap vs hold** — a quick Alt+Tab tap jumps to your last window with no
+              UI; hold to open the switcher (configurable delay).
+            - **Navigation** — arrows / Tab, <kbd>Home</kbd>/<kbd>End</kbd>, and
+              <kbd>1</kbd>–<kbd>9</kbd> to jump to a row.
+            - **Type-to-filter search** with the matched text highlighted.
+            - **Close from the switcher** — <kbd>Delete</kbd> or middle-click.
+            - **True most-recently-used ordering.**
+            - **Dock / undock display profiles** — separate visual settings for a
+              large monitor vs a laptop screen, switched automatically by screen size.
+            - **Deeply customizable** (per profile, with a live preview): item count,
+              columns, item/icon sizes, font family + weight, colors, corner radius,
+              opacity.
+            - App icon, optional acrylic background (experimental), logging, and
+              optional start-with-Windows (per-user).
