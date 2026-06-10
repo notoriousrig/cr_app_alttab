@@ -67,7 +67,7 @@ public sealed class IconRule
     {
         get
         {
-            string field = Field == RuleField.Title ? "Title" : "Process";
+            string fieldName = Field == RuleField.Title ? "Title" : "Process";
             string verb = Match switch
             {
                 RuleMatch.Equals => "equals",
@@ -76,7 +76,7 @@ public sealed class IconRule
             };
             string file = string.IsNullOrWhiteSpace(IconPath) ? "(no icon)" : Path.GetFileName(IconPath);
             string prefix = Enabled ? string.Empty : "(off) ";
-            return $"{prefix}{field} {verb} “{Pattern}” → {file}";
+            return $"{prefix}{fieldName} {verb} “{Pattern}” → {file}";
         }
     }
 
