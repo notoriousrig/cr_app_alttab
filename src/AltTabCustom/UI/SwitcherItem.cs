@@ -13,12 +13,16 @@ public sealed class SwitcherItem : INotifyPropertyChanged
 {
     private bool _isSelected;
 
-    public SwitcherItem(WindowInfo window)
+    public SwitcherItem(WindowInfo window, string query = "")
     {
         Window = window;
+        Query = query;
     }
 
     public WindowInfo Window { get; }
+
+    /// <summary>Current search query, used to highlight the matched substring.</summary>
+    public string Query { get; }
 
     public string Title => Window.Title;
     public string ProcessName => Window.ProcessName;

@@ -16,6 +16,7 @@ public partial class SwitcherWindow : Window
     private int _selectedIndex = -1;
     private DisplayProfile _profile = new();
     private bool _clickToActivate = true;
+    private bool _acrylic;
 
     private IntPtr _targetMonitor;
 
@@ -53,19 +54,22 @@ public partial class SwitcherWindow : Window
     /// Populate, style, position and display the switcher.
     /// </summary>
     public void ShowSwitcher(IReadOnlyList<WindowInfo> windows, int selectedIndex,
-        DisplayProfile profile, bool clickToActivate, IntPtr targetMonitorWindow)
+        DisplayProfile profile, bool clickToActivate, IntPtr targetMonitorWindow, bool acrylic = false)
     {
         _profile = profile;
         _clickToActivate = clickToActivate;
+        _acrylic = acrylic;
         _targetMonitor = targetMonitorWindow;
         ApplyTheme(profile);
         SetSearchText(string.Empty);
 
-        PopulateItems(windows, selectedIndex);
+        PopulateItems(windows, selectedIndex, query: string.Empty);
 
         IsShowing = true;
         Visibility = Visibility.Visible;
         Show();
+
+        ApplyAcrylic();
 
         // The items panel is realized during the layout pass triggered by Show();
         // apply the column count once it exists.
@@ -83,7 +87,7 @@ public partial class SwitcherWindow : Window
     public void UpdateItems(IReadOnlyList<WindowInfo> windows, int selectedIndex, string searchText)
     {
         SetSearchText(searchText);
-        PopulateItems(windows, selectedIndex);
+        PopulateItems(windows, selectedIndex, query: searchText);
         Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded,
             () => ApplyColumns(_profile.Columns));
         SetSelection(selectedIndex);
@@ -92,11 +96,11 @@ public partial class SwitcherWindow : Window
             () => PositionOnMonitor(_targetMonitor));
     }
 
-    private void PopulateItems(IReadOnlyList<WindowInfo> windows, int selectedIndex)
+    private void PopulateItems(IReadOnlyList<WindowInfo> windows, int selectedIndex, string query)
     {
         _items.Clear();
         foreach (var w in windows)
-            _items.Add(new SwitcherItem(w));
+            _items.Add(new SwitcherItem(w, query));
 
         ItemsHost.ItemsSource = null;
         ItemsHost.ItemsSource = _items;
@@ -135,6 +139,8 @@ public partial class SwitcherWindow : Window
     public void SelectFirst() => SetSelection(0);
 
     public void SelectLast() => SetSelection(_items.Count - 1);
+
+    public void SelectIndex(int index) => SetSelection(index);
 
     private void SetSelection(int index)
     {
@@ -229,6 +235,15 @@ public partial class SwitcherWindow : Window
         res["ItemFontWeight"] = ParseWeight(s.FontWeight);
         res["ProcessFontSize"] = s.ProcessFontSize;
         res["SubTextVisibility"] = s.ShowProcessName ? Visibility.Visible : Visibility.Collapsed;
+
+        // Amber accent for the matched search substring; legible on any row.
+        res["HighlightBrush"] = Frozen(Color.FromRgb(0xFF, 0xD1, 0x66));
+    }
+
+    private void ApplyAcrylic()
+    {
+        IntPtr hwnd = new WindowInteropHelper(this).Handle;
+        AcrylicHelper.Apply(hwnd, _acrylic, ColorFromHex(_profile.BackgroundColor));
     }
 
     private void ApplyColumns(int columns)

@@ -27,9 +27,11 @@ public partial class SettingsWindow : Window
         EnableProfilesBox.IsChecked = s.EnableDisplayProfiles;
         ThresholdBox.Text = s.LargeDisplayMinWidth.ToString(CultureInfo.InvariantCulture);
 
+        ShowDelayBox.Text = s.ShowDelayMs.ToString(CultureInfo.InvariantCulture);
         StartWithWindowsBox.IsChecked = s.StartWithWindows;
         PreventAltMenuBox.IsChecked = s.PreventAltMenu;
         ClickToActivateBox.IsChecked = s.ClickToActivate;
+        AcrylicBox.IsChecked = s.AcrylicBackground;
     }
 
     private void Save_Click(object sender, RoutedEventArgs e)
@@ -40,6 +42,8 @@ public partial class SettingsWindow : Window
             StartWithWindows = StartWithWindowsBox.IsChecked == true,
             PreventAltMenu = PreventAltMenuBox.IsChecked == true,
             ClickToActivate = ClickToActivateBox.IsChecked == true,
+            ShowDelayMs = FieldParse.Int(ShowDelayBox.Text, d.ShowDelayMs, 0, 2000),
+            AcrylicBackground = AcrylicBox.IsChecked == true,
 
             EnableDisplayProfiles = EnableProfilesBox.IsChecked == true,
             LargeDisplayMinWidth = FieldParse.Dbl(ThresholdBox.Text, d.LargeDisplayMinWidth, 400, 20000),

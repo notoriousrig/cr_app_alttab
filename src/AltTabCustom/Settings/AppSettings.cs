@@ -20,6 +20,20 @@ public sealed class AppSettings
     /// <summary>Close and activate when the mouse clicks an item.</summary>
     public bool ClickToActivate { get; set; } = true;
 
+    /// <summary>
+    /// Milliseconds Alt must be held after Alt+Tab before the overlay appears.
+    /// A quick tap within this window switches straight to the previous (MRU)
+    /// window without ever showing the UI, like the native switcher. Set to 0
+    /// to always show the overlay immediately.
+    /// </summary>
+    public int ShowDelayMs { get; set; } = 200;
+
+    /// <summary>
+    /// Experimental: paint an acrylic (blurred) background behind the overlay.
+    /// Falls back silently to the normal background if unsupported.
+    /// </summary>
+    public bool AcrylicBackground { get; set; } = false;
+
     // ---- Display-profile switching ----
     /// <summary>
     /// When true, the active profile is chosen automatically from the effective

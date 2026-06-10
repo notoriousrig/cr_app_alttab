@@ -2,7 +2,22 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              FontFamily="Segoe UI" FontSize="13">
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
+  <Grid>
+    <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+
+    <!-- Live preview of this profile. -->
+    <StackPanel Grid.Row="0" Margin="2,2,2,8">
+        <TextBlock Text="Preview" FontWeight="Bold" Margin="0,0,0,4" />
+        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled"
+                      MaxHeight="180" Background="#202020">
+            <Border x:Name="PreviewHost" Padding="14" HorizontalAlignment="Left" Margin="8" />
+        </ScrollViewer>
+    </StackPanel>
+
+    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="2">
             <TextBlock Text="Layout" FontWeight="Bold" Margin="0,0,0,6" />
             <Grid>
@@ -86,4 +101,5 @@
             </Grid>
         </StackPanel>
     </ScrollViewer>
+  </Grid>
 </UserControl>

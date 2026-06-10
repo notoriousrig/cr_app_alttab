@@ -1,5 +1,6 @@
 using System.Text;
 using System.Windows;
+using System.Windows.Threading;
 using AltTabCustom.Interop;
 using AltTabCustom.Settings;
 using AltTabCustom.UI;
@@ -9,28 +10,32 @@ namespace AltTabCustom.Core;
 
 /// <summary>
 /// The brain of the app. Owns the keyboard hook, the MRU focus tracker, and the
-/// switcher window, and implements the Alt+Tab state machine:
-///   * Alt+Tab (down)           -> open / advance forward
-///   * Alt+Shift+Tab (down)     -> open / advance backward
-///   * arrows while open        -> navigate
-///   * letters/digits/space     -> type-to-filter the list
-///   * Backspace                -> delete a filter character
-///   * Delete                   -> close the highlighted window (no switch)
-///   * Enter while open         -> commit
-///   * Esc while open           -> cancel
-///   * Alt released while open  -> commit
-/// Runs entirely on the WPF UI/dispatcher thread (where the hook is installed).
+/// switcher window, and implements the Alt+Tab state machine.
+///
+/// Tap-vs-hold: after Alt+Tab the controller waits <see cref="AppSettings.ShowDelayMs"/>
+/// before showing the overlay. Releasing Alt within that window is a "tap" that
+/// switches straight to the previous (MRU) window with no UI; holding longer (or
+/// pressing another key) opens the overlay for browsing.
+///
+/// While open: arrows/Tab navigate, Home/End jump, digits 1-9 quick-select (when
+/// no filter is active), letters/space filter, Backspace edits the filter,
+/// Delete closes the highlighted window, Enter or releasing Alt commits, Esc
+/// cancels. Runs entirely on the WPF UI/dispatcher thread.
 /// </summary>
 internal sealed class SwitcherController : IDisposable
 {
+    private enum State { Closed, Pending, Open }
+
     private readonly KeyboardHook _hook = new();
     private readonly SwitcherWindow _switcher = new();
     private readonly MruTracker _mru = new();
+    private readonly DispatcherTimer _showTimer;
     private AppSettings _settings;
 
-    private bool _isOpen;
+    private State _state = State.Closed;
     private IntPtr _foregroundAtOpen;
     private List<WindowInfo> _allWindows = new();
+    private int _pendingIndex;
     private readonly StringBuilder _filter = new();
 
     public SwitcherController(AppSettings settings)
@@ -40,6 +45,13 @@ internal sealed class SwitcherController : IDisposable
         _switcher.ItemCloseRequested += OnItemCloseRequested;
         _hook.KeyIntercepted = OnKey;
         _hook.OnError = ex => Logger.Error("Keyboard hook callback threw", ex);
+
+        _showTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(200) };
+        _showTimer.Tick += (_, _) =>
+        {
+            _showTimer.Stop();
+            if (_state == State.Pending) PromoteToOpen(_pendingIndex);
+        };
     }
 
     public void Start()
@@ -54,41 +66,43 @@ internal sealed class SwitcherController : IDisposable
     // ---- Hook handling (returns true to swallow the key) ----
     private bool OnKey(KeyEventArgs e)
     {
-        if (_isOpen)
-            return HandleWhileOpen(e);
-
-        if (e.VkCode == VK_TAB && e.IsKeyDown && e.AltDown)
+        if (_state == State.Closed)
         {
-            Open(backward: e.ShiftDown);
-            return true; // swallow the system Alt+Tab
+            if (e.VkCode == VK_TAB && e.IsKeyDown && e.AltDown)
+            {
+                Begin(backward: e.ShiftDown);
+                return true; // swallow the system Alt+Tab
+            }
+            return false;
         }
-        return false;
+
+        return HandleActive(e);
     }
 
-    private bool HandleWhileOpen(KeyEventArgs e)
+    private bool HandleActive(KeyEventArgs e)
     {
         switch (e.VkCode)
         {
             case VK_TAB:
-                if (e.IsKeyDown) Navigate(e.ShiftDown ? -1 : +1);
+                if (e.IsKeyDown) { EnsureOpen(); Navigate(e.ShiftDown ? -1 : +1); }
                 return true;
 
             case VK_LEFT:
             case VK_UP:
-                if (e.IsKeyDown) Navigate(-1);
+                if (e.IsKeyDown) { EnsureOpen(); Navigate(-1); }
                 return true;
 
             case VK_RIGHT:
             case VK_DOWN:
-                if (e.IsKeyDown) Navigate(+1);
+                if (e.IsKeyDown) { EnsureOpen(); Navigate(+1); }
                 return true;
 
             case VK_HOME:
-                if (e.IsKeyDown) _switcher.SelectFirst();
+                if (e.IsKeyDown) { EnsureOpen(); _switcher.SelectFirst(); }
                 return true;
 
             case VK_END:
-                if (e.IsKeyDown) _switcher.SelectLast();
+                if (e.IsKeyDown) { EnsureOpen(); _switcher.SelectLast(); }
                 return true;
 
             case VK_RETURN:
@@ -100,11 +114,11 @@ internal sealed class SwitcherController : IDisposable
                 return true;
 
             case VK_BACK:
-                if (e.IsKeyDown) Backspace();
+                if (e.IsKeyDown) { EnsureOpen(); Backspace(); }
                 return true;
 
             case VK_DELETE:
-                if (e.IsKeyDown) CloseSelected();
+                if (e.IsKeyDown) { EnsureOpen(); CloseSelected(); }
                 return true;
 
             case VK_MENU:
@@ -115,27 +129,33 @@ internal sealed class SwitcherController : IDisposable
                 return false;
 
             default:
-                if (e.IsKeyDown && TryMapChar(e.VkCode, out char c))
+                if (e.IsKeyDown)
                 {
-                    AppendFilter(c);
-                    return true;
+                    if (TryDigit(e.VkCode, out int digit)) { HandleDigit(digit); return true; }
+                    if (TryMapChar(e.VkCode, out char c)) { EnsureOpen(); AppendFilter(c); return true; }
                 }
                 return false;
         }
     }
 
+    private static bool TryDigit(int vk, out int digit)
+    {
+        if (vk >= VK_0 && vk <= VK_9) { digit = vk - VK_0; return true; }
+        if (vk >= VK_NUMPAD0 && vk <= VK_NUMPAD9) { digit = vk - VK_NUMPAD0; return true; }
+        digit = 0;
+        return false;
+    }
+
     private static bool TryMapChar(int vk, out char c)
     {
         if (vk >= VK_A && vk <= VK_Z) { c = (char)('a' + (vk - VK_A)); return true; }
-        if (vk >= VK_0 && vk <= VK_9) { c = (char)('0' + (vk - VK_0)); return true; }
-        if (vk >= VK_NUMPAD0 && vk <= VK_NUMPAD9) { c = (char)('0' + (vk - VK_NUMPAD0)); return true; }
         if (vk == VK_SPACE) { c = ' '; return true; }
         c = '\0';
         return false;
     }
 
     // ---- State transitions ----
-    private void Open(bool backward)
+    private void Begin(bool backward)
     {
         try
         {
@@ -149,33 +169,61 @@ internal sealed class SwitcherController : IDisposable
             if (_allWindows.Count == 0)
             {
                 Logger.Info("Alt+Tab pressed but no switchable windows were found.");
-                return;
+                return; // stay Closed
             }
 
-            // Forward: pre-select the previous window (index 1) like classic Alt+Tab.
-            // Backward: pre-select the last window.
-            int initial = backward ? _allWindows.Count - 1 : Math.Min(1, _allWindows.Count - 1);
-
-            _isOpen = true;
+            // Forward: previous window (index 1); Backward: last window.
+            _pendingIndex = backward ? _allWindows.Count - 1 : Math.Min(1, _allWindows.Count - 1);
 
             // Break the lone-Alt menu sequence so releasing Alt won't pop a menu bar.
             if (_settings.PreventAltMenu)
                 InjectDummyKey();
 
-            // Pick the display profile for the monitor the switcher will appear on.
-            double effectiveWidth = DisplayMetrics.EffectiveWidth(_foregroundAtOpen);
-            var profile = _settings.ResolveProfile(effectiveWidth);
+            if (_settings.ShowDelayMs <= 0)
+            {
+                PromoteToOpen(_pendingIndex);
+                return;
+            }
 
-            _switcher.ShowSwitcher(_allWindows, initial, profile, _settings.ClickToActivate, _foregroundAtOpen);
+            // Defer showing the overlay so a quick tap can switch with no UI.
+            _state = State.Pending;
+            _showTimer.Interval = TimeSpan.FromMilliseconds(_settings.ShowDelayMs);
+            _showTimer.Start();
         }
         catch (Exception ex)
         {
-            Logger.Error("Failed to open the switcher", ex);
-            _isOpen = false;
+            Logger.Error("Failed to begin a switch", ex);
+            Close();
         }
     }
 
+    private void EnsureOpen()
+    {
+        if (_state == State.Pending) PromoteToOpen(_pendingIndex);
+    }
+
+    private void PromoteToOpen(int selectedIndex)
+    {
+        _showTimer.Stop();
+        _state = State.Open;
+        double effectiveWidth = DisplayMetrics.EffectiveWidth(_foregroundAtOpen);
+        var profile = _settings.ResolveProfile(effectiveWidth);
+        _switcher.ShowSwitcher(_allWindows, selectedIndex, profile, _settings.ClickToActivate,
+            _foregroundAtOpen, _settings.AcrylicBackground);
+    }
+
     private void Navigate(int delta) => _switcher.MoveSelection(delta);
+
+    private void HandleDigit(int d)
+    {
+        EnsureOpen();
+        // 1-9 jump to that row when no filter is being typed; otherwise the
+        // digit extends the filter.
+        if (d >= 1 && _filter.Length == 0)
+            _switcher.SelectIndex(d - 1);
+        else
+            AppendFilter((char)('0' + d));
+    }
 
     private void AppendFilter(char c)
     {
@@ -205,8 +253,13 @@ internal sealed class SwitcherController : IDisposable
 
     private void Commit()
     {
-        if (!_isOpen) return;
-        var target = _switcher.SelectedWindow;
+        WindowInfo? target = _state switch
+        {
+            State.Pending => _pendingIndex >= 0 && _pendingIndex < _allWindows.Count ? _allWindows[_pendingIndex] : null,
+            State.Open => _switcher.SelectedWindow,
+            _ => null,
+        };
+
         Close();
         if (target is not null)
             ActivateSafe(target.Handle);
@@ -216,14 +269,16 @@ internal sealed class SwitcherController : IDisposable
 
     private void Close()
     {
-        _isOpen = false;
+        _showTimer.Stop();
+        bool wasOpen = _state == State.Open;
+        _state = State.Closed;
         _filter.Clear();
-        _switcher.HideSwitcher();
+        if (wasOpen) _switcher.HideSwitcher();
     }
 
     private void CloseSelected()
     {
-        if (!_isOpen) return;
+        if (_state != State.Open) return;
         var target = _switcher.SelectedWindow;
         if (target is not null)
             RemoveAndClose(target);
@@ -231,15 +286,13 @@ internal sealed class SwitcherController : IDisposable
 
     private void OnItemActivated(WindowInfo window)
     {
-        // Left mouse click in the overlay.
         Close();
         ActivateSafe(window.Handle);
     }
 
     private void OnItemCloseRequested(WindowInfo window)
     {
-        // Middle mouse click in the overlay.
-        if (_isOpen) RemoveAndClose(window);
+        if (_state == State.Open) RemoveAndClose(window);
     }
 
     private void RemoveAndClose(WindowInfo window)
@@ -287,6 +340,7 @@ internal sealed class SwitcherController : IDisposable
 
     public void Dispose()
     {
+        _showTimer.Stop();
         _hook.Dispose();
         _mru.Dispose();
         if (Application.Current is not null)

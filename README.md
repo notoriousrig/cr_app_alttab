@@ -20,8 +20,9 @@ elevation anywhere.
   - <kbd>Alt</kbd>+<kbd>Tab</kbd> — open / next
   - <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>Tab</kbd> — open / previous
   - Arrow keys — move selection; <kbd>Home</kbd> / <kbd>End</kbd> — jump to first / last
+  - <kbd>1</kbd>–<kbd>9</kbd> — jump straight to that row (when no search is active)
   - **Type to filter** — start typing to narrow the list by window title or
-    process name; <kbd>Backspace</kbd> clears a character
+    process name (the match is highlighted); <kbd>Backspace</kbd> clears a character
   - <kbd>Delete</kbd> — close the highlighted window (without switching to it)
   - <kbd>Enter</kbd> — activate; <kbd>Esc</kbd> — cancel
   - Release <kbd>Alt</kbd> — activate the highlighted window
@@ -29,6 +30,9 @@ elevation anywhere.
 - **True MRU ordering** — the list is ordered most-recently-used (tracked via a
   focus hook), so a quick Alt+Tab flips to your last window just like the
   system switcher.
+- **Tap vs hold** — a quick Alt+Tab tap switches straight to your previous
+  window with no overlay; hold Alt a moment (configurable delay) to open the
+  switcher and browse. Set the delay to 0 to always show it immediately.
 - **Display profiles (dock / undock)** — two independent visual profiles,
   **Docked** (large monitor) and **Laptop** (small screen), are switched
   automatically based on the effective width of the monitor the switcher opens

@@ -43,9 +43,21 @@
                                    Text="At or above the threshold (effective width of the monitor the switcher opens on) the Docked profile is used; below it, the Laptop profile. Turn the checkbox off to always use the Docked profile." />
 
                         <TextBlock Text="Behavior" FontWeight="Bold" Margin="0,18,0,6" />
+                        <Grid Margin="0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="260" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" VerticalAlignment="Center"
+                                       Text="Overlay show delay (ms, 0 = instant)" />
+                            <TextBox Grid.Column="1" x:Name="ShowDelayBox" VerticalAlignment="Center" />
+                        </Grid>
+                        <TextBlock TextWrapping="Wrap" Foreground="#666" Margin="0,2,0,6"
+                                   Text="A quick Alt+Tab tap within this delay switches straight to your last window without showing the overlay." />
                         <CheckBox x:Name="StartWithWindowsBox" Content="Start with Windows (per-user, no admin)" Margin="0,4" />
                         <CheckBox x:Name="PreventAltMenuBox" Content="Prevent Alt menu pop on release" Margin="0,4" />
                         <CheckBox x:Name="ClickToActivateBox" Content="Click an item to activate it" Margin="0,4" />
+                        <CheckBox x:Name="AcrylicBox" Content="Acrylic (blurred) background — experimental" Margin="0,4" />
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
