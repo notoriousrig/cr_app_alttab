@@ -26,6 +26,7 @@ elevation anywhere.
   - **Type to filter** — start typing to narrow the list by window title or
     process name (the match is highlighted); <kbd>Backspace</kbd> clears a character
   - <kbd>Delete</kbd> — close the highlighted window (without switching to it)
+  - <kbd>.</kbd> — close the switcher and open **Settings**
   - <kbd>Enter</kbd> — activate; <kbd>Esc</kbd> — cancel
   - Release <kbd>Alt</kbd> — activate the highlighted window
   - Left mouse click — activate (optional); middle click — close that window

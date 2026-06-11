@@ -44,6 +44,10 @@ internal sealed class SwitcherController : IDisposable
     // arrow sets it from the selected window; Left arrow clears it).
     private string? _processFilter;
 
+    /// <summary>Raised (on the UI thread) when the user asks to open Settings
+    /// from the switcher — e.g. by pressing '.' while it's visible.</summary>
+    public event Action? SettingsRequested;
+
     public SwitcherController(AppSettings settings)
     {
         _settings = settings;
@@ -174,6 +178,12 @@ internal sealed class SwitcherController : IDisposable
 
             case VK_DELETE:
                 if (e.IsKeyDown) { EnsureOpen(); CloseSelected(); }
+                return true;
+
+            case VK_OEM_PERIOD:
+            case VK_DECIMAL:
+                // '.' dismisses the switcher and opens Settings.
+                if (e.IsKeyDown) { Cancel(); SettingsRequested?.Invoke(); }
                 return true;
 
             case VK_MENU:

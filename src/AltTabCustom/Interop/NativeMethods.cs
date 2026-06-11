@@ -46,6 +46,8 @@ internal static class NativeMethods
     public const int VK_NUMPAD0 = 0x60;
     public const int VK_NUMPAD9 = 0x69;
     public const int VK_DELETE = 0x2E;
+    public const int VK_OEM_PERIOD = 0xBE; // '.' on the main keyboard
+    public const int VK_DECIMAL = 0x6E;    // '.' on the numeric keypad
 
     [StructLayout(LayoutKind.Sequential)]
     public struct KBDLLHOOKSTRUCT

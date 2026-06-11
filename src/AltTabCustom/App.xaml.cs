@@ -39,6 +39,7 @@ public partial class App : Application
         try
         {
             _controller = new SwitcherController(_settings);
+            _controller.SettingsRequested += OpenSettings;
             _controller.Start();
         }
         catch (Exception ex)
