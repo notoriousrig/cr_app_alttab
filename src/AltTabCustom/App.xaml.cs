@@ -12,6 +12,7 @@ public partial class App : Application
 
     private Mutex? _singleInstance;
     private SwitcherController? _controller;
+    private WindowIconForcer? _iconForcer;
     private Forms.NotifyIcon? _tray;
     private AppSettings _settings = new();
     private SettingsWindow? _settingsWindow;
@@ -48,6 +49,17 @@ public partial class App : Application
                 "AltTabCustom", MessageBoxButton.OK, MessageBoxImage.Error);
             Shutdown();
             return;
+        }
+
+        // Optionally force the icon rules onto the real taskbar / title-bar icons.
+        // Failures here must never block startup of the switcher itself.
+        try
+        {
+            _iconForcer = new WindowIconForcer(_settings);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Failed to start the window icon forcer", ex);
         }
 
         CreateTrayIcon();
@@ -131,10 +143,12 @@ public partial class App : Application
         SettingsStore.Save(updated);
         StartupManager.Apply(updated.StartWithWindows);
         _controller?.UpdateSettings(updated);
+        _iconForcer?.UpdateSettings(updated);
     }
 
     protected override void OnExit(ExitEventArgs e)
     {
+        _iconForcer?.Dispose();
         _controller?.Dispose();
         if (_tray is not null)
         {

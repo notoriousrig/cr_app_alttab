@@ -46,6 +46,14 @@ elevation anywhere.
   condition ANDed in (e.g. *title contains “calendar” **and** process contains
   “outlook”*). Point a rule at a `.ico`/`.png`. Rules are checked top to bottom,
   first match wins, and edited in **Settings → Icon rules**.
+- **Force icons on live windows (optional, no admin)** — the same rules can also
+  rewrite the **real Windows icon** (taskbar button + title bar + system Alt+Tab)
+  of matching windows, not just our overlay. Enabled via the *“Also apply these
+  icons to live windows”* checkbox in **Settings → Icon rules**. It uses
+  `WM_SETICON`, so it needs no elevation; the override lasts while AltTabCustom
+  runs and the original icon is restored on exit. A background sweep re-applies
+  it to new windows and to apps that reset their own icon. Elevated (admin)
+  windows are left untouched — the same Windows security boundary as the hook.
 - **Customizable** (per profile, via the tray → Settings dialog):
   - Max items on screen, number of columns
   - Item width/height, icon size

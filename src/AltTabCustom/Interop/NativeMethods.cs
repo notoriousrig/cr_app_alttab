@@ -256,6 +256,7 @@ internal static class NativeMethods
         uint fuFlags, uint uTimeout, out IntPtr lpdwResult);
 
     public const uint WM_GETICON = 0x007F;
+    public const uint WM_SETICON = 0x0080;
     public const int ICON_SMALL = 0;
     public const int ICON_BIG = 1;
     public const int ICON_SMALL2 = 2;
