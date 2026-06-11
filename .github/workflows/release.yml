@@ -103,6 +103,11 @@ jobs:
             - App icon, optional acrylic background (experimental), logging, and
               optional start-with-Windows (per-user).
 
+            ### New in 1.7
+            - **Press <kbd>.</kbd> while the switcher is visible to open Settings.**
+            - **Fixed:** unchecking *Show process name* now actually hides the
+              process-name line in the switcher (per display profile).
+
             ### Fixes in 1.6.1
             - **Icon rules** now scroll: the tab scrolls and the rules list has its
               own scrollbar, so you can reach every rule (and the full editor) no
