@@ -153,7 +153,7 @@ public partial class SwitcherWindow : Window
     {
         _items.Clear();
         foreach (var w in windows)
-            _items.Add(new SwitcherItem(w, query));
+            _items.Add(new SwitcherItem(w, query, _profile.ShowProcessName));
 
         ItemsHost.ItemsSource = null;
         ItemsHost.ItemsSource = _items;
@@ -308,7 +308,7 @@ public partial class SwitcherWindow : Window
         res["ItemFontSize"] = s.FontSize;
         res["ItemFontWeight"] = ParseWeight(s.FontWeight);
         res["ProcessFontSize"] = s.ProcessFontSize;
-        res["SubTextVisibility"] = s.ShowProcessName ? Visibility.Visible : Visibility.Collapsed;
+        // Process-name visibility is bound per-row via SwitcherItem.ProcessNameVisibility.
 
         // Amber accent for the matched search substring; legible on any row.
         res["HighlightBrush"] = Frozen(Color.FromRgb(0xFF, 0xD1, 0x66));
