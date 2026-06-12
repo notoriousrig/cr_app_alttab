@@ -96,14 +96,25 @@ jobs:
               large monitor vs a laptop screen, switched automatically by screen size.
             - **Custom icon rules** — force a chosen icon for windows whose title or
               process name matches (contains / equals / regex), optionally with a
-              second condition ANDed in; edited in **Settings → Icon rules**.
+              second condition ANDed in. Can also rewrite the **real** taskbar /
+              title-bar icon of live windows (no admin); edited in
+              **Settings → Icon rules**.
             - **Deeply customizable** (per profile, with a live preview): item count,
               columns, item/icon sizes, font family + weight, colors, corner radius,
               opacity.
             - App icon, optional acrylic background (experimental), logging, and
               optional start-with-Windows (per-user).
 
-            ### Fixes in 1.7.1
+            ### New in 1.8
+            - **Force icons on live windows (optional, no admin)** — icon rules can
+              now rewrite the **real Windows icon** (taskbar button + title bar +
+              system Alt+Tab) of matching windows, not just our overlay, via
+              `WM_SETICON`. Enable *“Also apply these icons to live windows”* in
+              **Settings → Icon rules**. The override lasts while AltTabCustom runs
+              and the original icon is restored on exit; elevated windows are left
+              untouched.
+
+            ### Fixes in 1.8
             - **Settings opens in front** when launched with <kbd>.</kbd> from the
               switcher (it could previously open behind other windows).
             - **Icon rules now work for UWP / Store apps** (Calculator, Photos,
