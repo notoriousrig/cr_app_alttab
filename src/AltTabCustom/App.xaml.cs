@@ -1,5 +1,7 @@
 using System.Windows;
+using System.Windows.Interop;
 using AltTabCustom.Core;
+using AltTabCustom.Interop;
 using AltTabCustom.Settings;
 using AltTabCustom.UI;
 using Forms = System.Windows.Forms;
@@ -115,7 +117,7 @@ public partial class App : Application
     {
         if (_settingsWindow is { IsLoaded: true })
         {
-            _settingsWindow.Activate();
+            BringToForeground(_settingsWindow);
             return;
         }
 
@@ -123,7 +125,23 @@ public partial class App : Application
         _settingsWindow.SettingsSaved += OnSettingsSaved;
         _settingsWindow.Closed += (_, _) => _settingsWindow = null;
         _settingsWindow.Show();
-        _settingsWindow.Activate();
+        BringToForeground(_settingsWindow);
+    }
+
+    /// <summary>
+    /// Force the window to the foreground. Plain Activate() can't steal focus when
+    /// we're triggered from the keyboard hook (the app isn't the foreground
+    /// process), so fall back to the AttachThreadInput technique.
+    /// </summary>
+    private static void BringToForeground(Window window)
+    {
+        if (window.WindowState == WindowState.Minimized)
+            window.WindowState = WindowState.Normal;
+        window.Activate();
+
+        IntPtr hwnd = new WindowInteropHelper(window).Handle;
+        if (hwnd != IntPtr.Zero)
+            WindowActivator.Activate(hwnd);
     }
 
     private void OnSettingsSaved(AppSettings updated)
