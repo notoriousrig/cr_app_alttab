@@ -25,8 +25,7 @@ internal static class WindowEnumerator
             string title = GetTitle(hWnd);
             if (string.IsNullOrWhiteSpace(title)) return true;
 
-            GetWindowThreadProcessId(hWnd, out uint pid);
-            string procName = TryGetProcessName(pid);
+            var (pid, procName) = ResolveProcess(hWnd);
             bool minimized = IsIconic(hWnd);
 
             var info = new WindowInfo
@@ -107,6 +106,60 @@ internal static class WindowEnumerator
         var sb = new StringBuilder(len + 1);
         GetWindowText(hWnd, sb, sb.Capacity);
         return sb.ToString();
+    }
+
+    /// <summary>
+    /// Returns the process that really owns the window. For UWP/store apps the
+    /// top-level window belongs to ApplicationFrameHost.exe; the actual app runs
+    /// in a child "Windows.UI.Core.CoreWindow" of a different process (e.g.
+    /// Calculator). Resolving that makes title/process rules and app-grouping see
+    /// the real app instead of the generic host.
+    /// </summary>
+    private static (uint pid, string name) ResolveProcess(IntPtr hWnd)
+    {
+        GetWindowThreadProcessId(hWnd, out uint pid);
+        string name = TryGetProcessName(pid);
+
+        if (string.Equals(name, "ApplicationFrameHost", StringComparison.OrdinalIgnoreCase))
+        {
+            IntPtr core = FindHostedCoreWindow(hWnd, pid);
+            if (core != IntPtr.Zero)
+            {
+                GetWindowThreadProcessId(core, out uint childPid);
+                if (childPid != 0 && childPid != pid)
+                {
+                    string childName = TryGetProcessName(childPid);
+                    if (!string.IsNullOrEmpty(childName))
+                        return (childPid, childName);
+                }
+            }
+        }
+
+        return (pid, name);
+    }
+
+    /// <summary>Find the hosted CoreWindow child belonging to a different process.</summary>
+    private static IntPtr FindHostedCoreWindow(IntPtr parent, uint hostPid)
+    {
+        IntPtr found = IntPtr.Zero;
+        EnumChildWindows(parent, (child, _) =>
+        {
+            GetWindowThreadProcessId(child, out uint childPid);
+            if (childPid != hostPid && GetWindowClass(child) == "Windows.UI.Core.CoreWindow")
+            {
+                found = child;
+                return false; // stop enumerating
+            }
+            return true;
+        }, IntPtr.Zero);
+        return found;
+    }
+
+    private static string GetWindowClass(IntPtr hWnd)
+    {
+        var sb = new StringBuilder(256);
+        int n = GetClassName(hWnd, sb, sb.Capacity);
+        return n > 0 ? sb.ToString() : string.Empty;
     }
 
     private static string TryGetProcessName(uint pid)
