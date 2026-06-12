@@ -38,6 +38,8 @@ public partial class SettingsWindow : Window
         ClickToActivateBox.IsChecked = s.ClickToActivate;
         AcrylicBox.IsChecked = s.AcrylicBackground;
 
+        ForceWindowIconsBox.IsChecked = s.ForceWindowIcons;
+
         _rules.Clear();
         foreach (var rule in s.IconRules ?? new())
             _rules.Add(rule.Clone()); // clone so Cancel doesn't mutate live settings
@@ -62,6 +64,7 @@ public partial class SettingsWindow : Window
             Laptop = LaptopEditor.ToProfile(),
 
             IconRules = _rules.Select(r => r.Clone()).ToList(),
+            ForceWindowIcons = ForceWindowIconsBox.IsChecked == true,
         };
 
         SettingsSaved?.Invoke(s);

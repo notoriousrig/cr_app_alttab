@@ -27,6 +27,15 @@ public sealed class AppSettings
     public List<IconRule> IconRules { get; set; } = new();
 
     /// <summary>
+    /// Also apply the icon rules to the <b>real</b> Windows windows (taskbar
+    /// button + title bar), not just inside our overlay, via WM_SETICON. Needs no
+    /// admin; the override lasts while AltTabCustom runs and is restored on exit.
+    /// Elevated (admin) windows are unaffected — the same security boundary that
+    /// applies to the keyboard hook.
+    /// </summary>
+    public bool ForceWindowIcons { get; set; } = false;
+
+    /// <summary>
     /// Milliseconds Alt must be held after Alt+Tab before the overlay appears.
     /// A quick tap within this window switches straight to the previous (MRU)
     /// window without ever showing the UI, like the native switcher. Set to 0
