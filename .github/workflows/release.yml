@@ -103,6 +103,14 @@ jobs:
             - App icon, optional acrylic background (experimental), logging, and
               optional start-with-Windows (per-user).
 
+            ### Fixes in 1.7.1
+            - **Settings opens in front** when launched with <kbd>.</kbd> from the
+              switcher (it could previously open behind other windows).
+            - **Icon rules now work for UWP / Store apps** (Calculator, Photos,
+              etc.). Their windows are hosted by ApplicationFrameHost; the real app
+              process is now resolved, so *Process name* rules and app-grouping
+              match the actual app.
+
             ### New in 1.7
             - **Press <kbd>.</kbd> while the switcher is visible to open Settings.**
             - **Fixed:** unchecking *Show process name* now actually hides the
